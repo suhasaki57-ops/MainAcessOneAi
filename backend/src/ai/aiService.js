@@ -106,77 +106,197 @@ const translateOfflineDictionary = (text, targetLang) => {
   const lowerInput = cleanInput.toLowerCase().trim();
 
   const translations = {
+    french: {
+      'hello good morning': 'Bonjour, bon matin',
+      'good morning': 'Bonjour',
+      'good afternoon': 'Bon après-midi',
+      'good evening': 'Bonsoir',
+      'good night': 'Bonne nuit',
+      'hello': 'Bonjour',
+      'hi': 'Salut',
+      'how are you': 'Comment allez-vous ?',
+      'thank you': 'Merci beaucoup',
+      'welcome': 'Bienvenue',
+      'yes': 'Oui',
+      'no': 'Non',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': "ascess-1-ai est une plateforme accessible propulsée par l'IA pour tous.",
+      'hello i am suhas': 'Bonjour, je suis Suhas.',
+      'my name is suhas': 'Mon nom est Suhas.',
+    },
     spanish: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai es una plataforma accesible basada en inteligencia artificial para todos.',
+      'hello good morning': 'Hola, buenos días',
+      'good morning': 'Buenos días',
+      'good afternoon': 'Buenas tardes',
+      'good evening': 'Buenas noches',
+      'good night': 'Buenas noches',
+      'hello': 'Hola',
+      'hi': 'Hola',
+      'how are you': '¿Cómo estás?',
+      'thank you': 'Muchas gracias',
+      'welcome': 'Bienvenido',
+      'yes': 'Sí',
+      'no': 'No',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai es una plataforma accesible basada en inteligencia artificial para todos.',
       'hello i am suhas': 'Hola, soy Suhas.',
-      hello: 'Hola',
+      'my name is suhas': 'Mi nombre es Suhas.',
     },
     telugu: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai అనేది అందరికీ అందుబాటులో ఉండే AI-పవర్డ్ ప్లాట్‌ఫారమ్.',
+      'hello good morning': 'నమస్కారం, శుభోదయం',
+      'good morning': 'శుభోదయం',
+      'good afternoon': 'శుభ మధ్యాహ్నం',
+      'good evening': 'శుభ సాయంత్రం',
+      'good night': 'శుభ రాత్రి',
+      'hello': 'నమస్కారం',
+      'hi': 'హాయ్',
+      'how are you': 'మీరు ఎలా ఉన్నారు?',
+      'thank you': 'ధన్యవాదాలు',
+      'welcome': 'స్వాగతం',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai అనేది అందరికీ అందుబాటులో ఉండే AI-పవర్డ్ ప్లాట్‌ఫారమ్.',
       'hello i am suhas': 'నమస్కారం, నేను సుహాస్.',
-      hello: 'నమస్కారం',
     },
     hindi: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai सभी के लिए एक सुलभ, AI-संचालित प्लेटफॉर्म है।',
+      'hello good morning': 'नमस्ते, शुभ प्रभात',
+      'good morning': 'शुभ प्रभात',
+      'good afternoon': 'नमस्कार',
+      'good evening': 'शुभ संध्या',
+      'good night': 'शुभ रात्रि',
+      'hello': 'नमस्ते',
+      'hi': 'नमस्ते',
+      'how are you': 'आप कैसे हैं?',
+      'thank you': 'धन्यवाद',
+      'welcome': 'स्वागत है',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai सभी के लिए एक सुलभ, AI-संचालित प्लेटफॉर्म है।',
       'hello i am suhas': 'नमस्ते, मैं सुहास हूँ।',
-      hello: 'नमस्ते',
     },
     tamil: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai அனைவருக்கும் அணுகக்கூடிய, AI-இயக்கப்படும் தளமாகும்.',
+      'hello good morning': 'வணக்கம், காலை வணக்கம்',
+      'good morning': 'காலை வணக்கம்',
+      'good afternoon': 'மதிய வணக்கம்',
+      'good evening': 'மாலை வணக்கம்',
+      'good night': 'இனிய இரவு',
+      'hello': 'வணக்கம்',
+      'hi': 'வணக்கம்',
+      'how are you': 'எப்படி இருக்கிறீர்கள்?',
+      'thank you': 'நன்றி',
+      'welcome': 'நல்வரவு',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai அனைவருக்கும் அணுகக்கூடிய, AI-இயக்கப்படும் தளமாகும்.',
       'hello i am suhas': 'வணக்கம், நான் சுஹாஸ்.',
-      hello: 'வணக்கம்',
     },
     kannada: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai ಪ್ರತಿಯೊಬ್ಬರಿಗೂ ಪ್ರವೇಶಿಸಬಹುದಾದ AI-ಚಾಲಿತ ವೇದಿಕೆಯಾಗಿದೆ.',
+      'hello good morning': 'ನಮಸ್ಕಾರ, ಶುಭೋದಯ',
+      'good morning': 'ಶುಭೋದಯ',
+      'good afternoon': 'ಶುಭ ಮಧ್ಯಾಹ್ನ',
+      'good evening': 'ಶುಭ ಸಂಜೆ',
+      'good night': 'ಶುಭ ರಾತ್ರಿ',
+      'hello': 'ನಮಸ್ಕಾರ',
+      'hi': 'ಹಾಯ್',
+      'how are you': 'ಹೇಗಿದ್ದೀರಿ?',
+      'thank you': 'ಧನ್ಯವಾದಗಳು',
+      'welcome': 'ಸ್ವಾಗತ',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai ಪ್ರತಿಯೊಬ್ಬರಿಗೂ ಪ್ರವೇಶಿಸಬಹುದಾದ AI-ಚಾಲಿತ ವೇದಿಕೆಯಾಗಿದೆ.',
       'hello i am suhas': 'ನಮಸ್ಕಾರ, ನಾನು ಸುಹಾಸ್.',
-      hello: 'ನಮಸ್ಕಾರ',
     },
     malayalam: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai ഏവർക്കും പ്രാപ്യമായ AI-പ്രവർത്തിത പ്ലാറ്റ്‌ഫോമാണ്.',
+      'hello good morning': 'നമസ്കാരം, സുപ്രഭാതം',
+      'good morning': 'സുപ്രഭാതം',
+      'good afternoon': 'ശുഭ ഉച്ചസമയം',
+      'good evening': 'ശുഭ സായാഹ്നം',
+      'good night': 'ശുഭ രാത്രി',
+      'hello': 'നമസ്കാരം',
+      'hi': 'ഹായ്',
+      'how are you': 'സുഖമാണോ?',
+      'thank you': 'നന്ദി',
+      'welcome': 'സ്വാഗതം',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai ഏവർക്കും പ്രാപ്യമായ AI-പ്രവർത്തിത പ്ലാറ്റ്‌ഫോമാണ്.',
       'hello i am suhas': 'നമസ്കാരം, ഞാൻ സുഹാസ്.',
-      hello: 'നമസ്കാരം',
     },
     marathi: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai हे सर्वांसाठी एक प्रवेशयोग्य AI-संचालित प्लॅटफॉर्म आहे.',
+      'hello good morning': 'नमस्कार, शुभ प्रभात',
+      'good morning': 'शुभ प्रभात',
+      'good afternoon': 'शुभ दुपार',
+      'good evening': 'शुभ संध्याकाळ',
+      'good night': 'शुभ रात्री',
+      'hello': 'नमस्कार',
+      'hi': 'नमस्कार',
+      'how are you': 'तुम्ही कसे आहात?',
+      'thank you': 'धन्यवाद',
+      'welcome': 'स्वागत आहे',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai हे सर्वांसाठी एक प्रवेशयोग्य AI-संचालित प्लॅटफॉर्म आहे.',
       'hello i am suhas': 'नमस्कार, मी सुहास आहे.',
-      hello: 'नमस्कार',
     },
-    french: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        "ascess-1-ai est une plateforme accessible propulsée par l'IA pour tous.",
-      'hello i am suhas': 'Bonjour, je suis Suhas.',
-      hello: 'Bonjour',
+    urdu: {
+      'hello good morning': 'سلام، صبح بخیر',
+      'good morning': 'صبح بخیر',
+      'good afternoon': 'سہ پہر بخیر',
+      'good evening': 'شام بخیر',
+      'good night': 'شب بخیر',
+      'hello': 'سلام',
+      'hi': 'سلام',
+      'how are you': 'آپ کیسے ہیں؟',
+      'thank you': 'شکریہ',
+      'welcome': 'خوش آمدید',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai سب کے لیے ایک قابل رسائی AI پلیٹ فارم ہے۔',
     },
     german: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai ist eine barrierefreie, KI-gestützte Plattform für alle.',
+      'hello good morning': 'Guten Morgen, hallo',
+      'good morning': 'Guten Morgen',
+      'good afternoon': 'Guten Tag',
+      'good evening': 'Guten Abend',
+      'good night': 'Gute Nacht',
+      'hello': 'Hallo',
+      'hi': 'Hallo',
+      'how are you': 'Wie geht es Ihnen?',
+      'thank you': 'Vielen Dank',
+      'welcome': 'Willkommen',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai ist eine barrierefreie, KI-gestützte Plattform für alle.',
       'hello i am suhas': 'Hallo, ich bin Suhas.',
-      hello: 'Hallo',
     },
     japanese: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai は、すべての人のためのアクセシブルなAI搭載プラットフォームです。',
+      'hello good morning': 'おはようございます',
+      'good morning': 'おはようございます',
+      'good afternoon': 'こんにちは',
+      'good evening': 'こんばんは',
+      'good night': 'おやすみなさい',
+      'hello': 'こんにちは',
+      'hi': 'やあ',
+      'how are you': 'お元気ですか？',
+      'thank you': 'ありがとうございます',
+      'welcome': 'ようこそ',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai は、すべての人のためのアクセシブルなAI搭載プラットフォームです。',
       'hello i am suhas': 'こんにちは、私は Suhas です。',
-      hello: 'こんにちは',
     },
     chinese: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai 是一个适合所有人的无障碍 AI 平台。',
+      'hello good morning': '早上好，你好',
+      'good morning': '早上好',
+      'good afternoon': '下午好',
+      'good evening': '晚上好',
+      'good night': '晚安',
+      'hello': '你好',
+      'hi': '你好',
+      'how are you': '你好吗？',
+      'thank you': '谢谢你',
+      'welcome': '欢迎',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai 是一个适合所有人的无障碍 AI 平台。',
       'hello i am suhas': '你好，我是 Suhas。',
-      hello: '你好',
     },
     arabic: {
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.':
-        'ascess-1-ai هو منصة إمكانية الوصول المدعومة بالذكاء الاصطناعي للجميع.',
+      'hello good morning': 'صباح الخير، مرحبا',
+      'good morning': 'صباح الخير',
+      'good afternoon': 'مساء الخير',
+      'good evening': 'مساء الخير',
+      'good night': 'تصبح على خير',
+      'hello': 'مرحبا',
+      'hi': 'أهلا',
+      'how are you': 'كيف حالك؟',
+      'thank you': 'شكرا جزيلا',
+      'welcome': 'أهلا بك',
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai هو منصة إمكانية الوصول المدعومة بالذكاء الاصطناعي للجميع.',
       'hello i am suhas': 'مرحبا، أنا سوهاس.',
-      hello: 'مرحبا',
+    },
+    english: {
+      'hello good morning': 'Hello, good morning',
+      'good morning': 'Good morning',
+      'hello': 'Hello',
     },
   };
 
@@ -185,23 +305,22 @@ const translateOfflineDictionary = (text, targetLang) => {
     return targetMap[lowerInput];
   }
 
-  const prefixes = {
-    spanish: 'Traducción al español: ',
-    telugu: 'తెలుగు అనువాదం: ',
-    hindi: 'हिंदी अनुवाद: ',
-    tamil: 'தமிழ் மொழிபெயர்ப்பு: ',
-    kannada: 'ಕನ್ನಡ ಅನುವಾದ: ',
-    malayalam: 'മലയാളം തർജ്ജമ: ',
-    marathi: 'मराठी भाषांतर: ',
-    french: 'Traduction en français : ',
-    german: 'Deutsche Übersetzung: ',
-    japanese: '日本語訳： ',
-    chinese: '中文翻译： ',
-    arabic: 'الترجمة إلى العربية: ',
-  };
+  // Word/Phrase replacement logic for multi-word inputs
+  if (targetMap) {
+    let resultText = lowerInput;
+    let replacedAny = false;
+    for (const [key, value] of Object.entries(targetMap)) {
+      if (key.length > 2 && resultText.includes(key)) {
+        resultText = resultText.replace(new RegExp(key, 'gi'), value);
+        replacedAny = true;
+      }
+    }
+    if (replacedAny) {
+      return resultText;
+    }
+  }
 
-  const prefix = prefixes[lang] || `[${targetLang} Translation]: `;
-  return `${prefix}${cleanInput}`;
+  return cleanInput;
 };
 
 // High-Precision Document & Web Content Classifier Fallback
@@ -357,10 +476,12 @@ export const aiEngine = {
     if (cached) return cached;
 
     const { systemInstruction, prompt } = buildTranslationPrompt(text, targetLang);
-    let rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-1.5-flash', 'translation');
+    let rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash', 'translation');
 
     if (typeof rawOutput === 'string' && (rawOutput.startsWith('{') || rawOutput.includes('"cleanedText"'))) {
       rawOutput = translateOfflineDictionary(text, targetLang);
+    } else if (typeof rawOutput === 'string') {
+      rawOutput = rawOutput.replace(/^(?:Traduction en [^:]+:|Traducción al [^:]+:|[\w\s]+ Translation:)\s*/i, '').trim();
     }
 
     aiCache.set(text, cacheKey, rawOutput);
