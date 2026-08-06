@@ -8,7 +8,7 @@ import InputField from '../components/forms/InputField';
 import { aiService } from '../services/aiService';
 import { documentService } from '../services/documentService';
 import { useNotification } from '../context/NotificationContext';
-import { FiUploadCloud, FiFileText, FiX, FiCpu, FiCheckCircle, FiAlertTriangle, FiSliders, FiEye, FiZap } from 'react-icons/fi';
+import { FiUploadCloud, FiFileText, FiX, FiCpu, FiCheckCircle, FiAlertTriangle, FiZap } from 'react-icons/fi';
 
 export const UploadPage = () => {
   const [activeTab, setActiveTab] = useState('file');
@@ -53,6 +53,8 @@ export const UploadPage = () => {
       let confidenceRating = 'High';
 
       if (activeTab === 'file' && files.length > 0) {
+        console.log('🔍 [FRONTEND DEBUG 1] Uploading file:', files[0]?.name, `${(files[0]?.size / 1024).toFixed(1)} KB`);
+
         setProcessingStage('1/4: Enhancing Image & Contrast (Sharp)...');
         await new Promise((r) => setTimeout(r, 400));
 
@@ -66,6 +68,8 @@ export const UploadPage = () => {
         extractedText = uploadedDoc.extractedText || uploadedDoc.cleanedText || files[0].name;
         confidence = uploadedDoc.confidence || 90;
         confidenceRating = uploadedDoc.confidenceRating || (confidence >= 80 ? 'High' : confidence >= 60 ? 'Medium' : 'Low');
+
+        console.log('🔍 [FRONTEND DEBUG 2] Backend OCR Result:', extractedText.slice(0, 150));
       } else if (activeTab === 'url' && pastedUrl.trim()) {
         setProcessingStage('1/4: Fetching Web Page Layout...');
         const urlRes = await documentService.processUrl(pastedUrl);
@@ -81,9 +85,11 @@ export const UploadPage = () => {
 
       setProcessingStage('3/4: Sanitizing OCR Noise & Structuring Layout...');
       const ocrRes = await aiService.cleanOCR(extractedText);
+      console.log('🔍 [FRONTEND DEBUG 3] Clean OCR Response:', ocrRes);
 
       setProcessingStage('4/4: Gemini AI Document Understanding & Summary...');
       const sumRes = await aiService.summarize(extractedText);
+      console.log('🔍 [FRONTEND DEBUG 4] Gemini Summary Response:', sumRes);
 
       setResult({
         ocr: ocrRes.data || ocrRes,

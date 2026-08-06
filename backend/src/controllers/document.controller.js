@@ -11,7 +11,16 @@ export const uploadDocument = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new ApiError(400, 'Document file is required (PDF, Image, Text)');
   }
+
+  console.log(`\n🔍 [DEBUG 1] File Uploaded to Backend:`, {
+    fileName: req.file.originalname,
+    fileSize: `${(req.file.size / 1024).toFixed(1)} KB`,
+    mimeType: req.file.mimetype,
+  });
+
   const result = await processFileDocument(req.file, req.user?.id, req.body.title);
+
+  console.log(`🔍 [DEBUG 2] File Processed OCR Raw Length: ${result.rawText?.length || 0} chars | Cleaned Length: ${result.cleanedText?.length || 0} chars`);
 
   ActivityLogService.logUpload(req.user?.id || 'demo-user-101', req.file.originalname, req.file.mimetype, req.file.size, req);
 
@@ -20,6 +29,8 @@ export const uploadDocument = asyncHandler(async (req, res) => {
 
 export const processUrl = asyncHandler(async (req, res) => {
   const { url } = req.body;
+  console.log(`\n🔍 [DEBUG 1] URL Ingestion Request:`, url);
+
   const result = await processURLDocument(url, req.user?.id);
 
   ActivityLogService.logWebsiteScan(req.user?.id || 'demo-user-101', url, req);
