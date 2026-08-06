@@ -15,8 +15,8 @@ const formatAIResponse = (res, statusCode, data, message = 'Success', startTime)
 
 export const chat = asyncHandler(async (req, res) => {
   const startTime = Date.now();
-  const { prompt, history } = req.body;
-  const output = await aiEngine.copilotChat(prompt, history);
+  const { prompt, history, activeDoc } = req.body;
+  const output = await aiEngine.copilotChat(prompt, history, activeDoc);
 
   ActivityLogService.logAIChat(req.user?.id || 'demo-user-101', prompt || 'Copilot Chat', output?.length || 0, req);
 

@@ -15,10 +15,17 @@ import withRetry from './retryHandler.js';
 import env from '../config/env.js';
 import { cleanContent } from '../services/document/contentCleaner.js';
 
-// Conversational AI Copilot Assistant Engine
-const generateCopilotChatResponse = (query = '', history = []) => {
+// Conversational AI Accessibility Assistant Engine
+const generateCopilotChatResponse = (query = '', history = [], activeDoc = null) => {
   const cleanQuery = query.replace(/^\[Prior Conversation History\]:[\s\S]*\[User Message\]:\s*/, '').trim();
   const lower = cleanQuery.toLowerCase();
+
+  // If Active Document is attached, answer from Document Context
+  if (activeDoc && (lower.includes('document') || lower.includes('summarize') || lower.includes('explain') || lower.includes('about') || lower.includes('what is'))) {
+    const docTitle = activeDoc.title || 'Uploaded Document';
+    const docText = activeDoc.extracted_text || activeDoc.cleanedText || activeDoc.title;
+    return `### 📄 Document Intelligence Analysis for "${docTitle}"\n\nBased on your active document context:\n\n**Executive Overview**:\n${docText.slice(0, 220)}...\n\n**Key Highlights**:\n• **Subject**: ${docTitle}\n• **Document Processing**: Layout, structure, and text content ingested\n• **Accessibility Benchmark**: Suitable for screen reader navigation and TTS text playback.`;
+  }
 
   if (
     lower === 'hello' ||
@@ -30,7 +37,7 @@ const generateCopilotChatResponse = (query = '', history = []) => {
     lower.startsWith('hello') ||
     lower.startsWith('hi ')
   ) {
-    return `Hello! I am your **ascess-1-ai Copilot**—your AI assistant for web accessibility, WCAG 2.1 AAA compliance, document processing, and inclusive UI design.\n\nHow can I help you today? You can ask me to:\n- 🎯 Explain WCAG color contrast & focus ring requirements\n- 📄 Summarize, simplify, or translate documents\n- 🛡️ Audit websites or code snippets for accessibility issues`;
+    return `👋 Welcome to **ascess-1-ai**!\n\nI'm your **AI Accessibility Assistant**.\n\nI can help you:\n• Analyze documents\n• Explain PDFs\n• Improve accessibility\n• Simplify difficult text\n• Translate content\n• Generate accessibility reports\n• Answer questions from uploaded files\n\nUpload a document or ask me anything to get started!`;
   }
 
   if (lower.includes('contrast') || lower.includes('color')) {
@@ -41,11 +48,11 @@ const generateCopilotChatResponse = (query = '', history = []) => {
     return `### ⌨️ WCAG 2.1 Keyboard Navigation & Focus Indicators\n\n- **Criterion 2.4.7 (Focus Visible)**: Any keyboard operable user interface must have a visible focus indicator ring.\n- **Recommended CSS Style**:\n\`\`\`css\n*:focus-visible {\n  outline: 3px solid #0284c7;\n  outline-offset: 2px;\n}\n\`\`\`\nThis ensures screen reader users and keyboard navigators can visually trace interactive element focus.`;
   }
 
-  if (lower.includes('document') || lower.includes('summary') || lower.includes('file') || lower.includes('pdf')) {
-    return `### 📄 Smart Document Processing Engine\n\nOur system ingests PDFs, OCR images, web URLs, and plain text:\n1. **Text Extraction**: Uses Tesseract OCR and PDF parsers to extract clean text.\n2. **AI Sanitation**: Strips garbage symbols and fixes broken word bounds.\n3. **Accessibility Output**: Generates 1-sentence summaries, bullet points, and multi-language translations.`;
+  if (lower.includes('alt text') || lower.includes('image')) {
+    return `### 🖼️ Accessibility Alt Text Best Practices\n\n- **Concise Alt Text**: Keep alternative text descriptions under 125 characters.\n- **Screen Reader Optimization**: Avoid redundant phrases like "image of" or "photo showing".\n- **Decorative Images**: Use empty alt text (\`alt=""\`) for purely decorative visual elements so screen readers skip them smoothly.`;
   }
 
-  return `Thank you for asking about **"${cleanQuery.slice(0, 50)}"**!\n\nAs your **ascess-1-ai Copilot**, I recommend implementing WCAG 2.1 AA benchmarks: ensure clear semantic HTML (\`<button>\`, \`<nav>\`, \`<header>\`), visible focus rings, ARIA labels for icon-only buttons, and text-to-speech accessibility.\n\nWould you like me to audit a specific code snippet or generate accessibility alt text for an image?`;
+  return `### 🛡️ AI Accessibility Guidance on "${cleanQuery.slice(0, 45)}"\n\nAs your **ascess-1-ai Assistant**, I recommend implementing WCAG 2.1 AA standards:\n- **Semantic Structure**: Use proper HTML5 landmark tags (\`<main>\`, \`<nav>\`, \`<header>\`, \`<section>\`).\n- **Interactive Contrast**: Ensure buttons and links achieve at least 4.5:1 contrast against background cards.\n- **Keyboard Accessibility**: Ensure all clickable elements can be tabbed to with visible focus rings.\n\nWould you like me to analyze a specific document, code snippet, or generate an accessibility audit report?`;
 };
 
 // High-Accuracy Multi-Language Translation Engine
@@ -89,7 +96,6 @@ const analyzeDynamicOCR = (text = '') => {
 
   const lower = cleaned.toLowerCase();
 
-  // 1. YouTube & Video Streaming Portal
   if (lower.includes('youtube') || lower.includes('youtu.be')) {
     return {
       title: 'YouTube Video Streaming Platform',
@@ -104,7 +110,6 @@ const analyzeDynamicOCR = (text = '') => {
     };
   }
 
-  // 2. Edible Oil & Food Packaging Label
   if (lower.includes('freedom') || lower.includes('oil') || lower.includes('sunflower') || lower.includes('gold winner')) {
     return {
       title: 'Freedom Refined Sunflower Oil',
@@ -119,7 +124,6 @@ const analyzeDynamicOCR = (text = '') => {
     };
   }
 
-  // 3. General Document / Web Page
   const lines = cleaned.split('\n').filter((l) => l.trim().length > 3);
   const titleLine = lines.find((l) => l.startsWith('###')) || lines[0] || 'Web Page Content Analysis';
   let cleanTitle = titleLine.replace(/^###\s*/, '').trim();
@@ -141,7 +145,7 @@ const analyzeDynamicOCR = (text = '') => {
   };
 };
 
-const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gemini-1.5-flash', taskType = 'general') => {
+const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gemini-1.5-flash', taskType = 'general', activeDoc = null) => {
   console.log(`\n🔍 [DEBUG 4] Gemini Request Prompt (${taskType}):`, promptText.slice(0, 150));
 
   if (!env.geminiApiKey || env.geminiApiKey === 'your-gemini-api-key') {
@@ -151,7 +155,7 @@ const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gem
       return translateOfflineDictionary(promptText, targetLang);
     }
     if (taskType === 'chat') {
-      return generateCopilotChatResponse(promptText);
+      return generateCopilotChatResponse(promptText, [], activeDoc);
     }
     const dynamicRes = analyzeDynamicOCR(promptText);
     return JSON.stringify(dynamicRes);
@@ -301,12 +305,12 @@ export const aiEngine = {
   },
 
   // 9. Copilot Chat
-  copilotChat: async (query, history = []) => {
-    const { systemInstruction, prompt } = buildCopilotChatPrompt(query, history);
-    let rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-1.5-flash', 'chat');
+  copilotChat: async (query, history = [], activeDoc = null) => {
+    const { systemInstruction, prompt } = buildCopilotChatPrompt(query, history, activeDoc);
+    let rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-1.5-flash', 'chat', activeDoc);
 
     if (typeof rawOutput === 'string' && (rawOutput.startsWith('{') || rawOutput.includes('"cleanedText"'))) {
-      rawOutput = generateCopilotChatResponse(query, history);
+      rawOutput = generateCopilotChatResponse(query, history, activeDoc);
     }
 
     return rawOutput;

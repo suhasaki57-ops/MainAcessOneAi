@@ -104,13 +104,31 @@ export const buildReadingAssistantPrompt = (text, query) => {
   };
 };
 
-export const buildCopilotChatPrompt = (query, history = []) => {
+export const buildCopilotChatPrompt = (query, history = [], activeDoc = null) => {
+  const docContext = activeDoc
+    ? `[Active Uploaded Document Context]:\nTitle: ${activeDoc.title || 'Uploaded Document'}\nExtracted Content:\n${activeDoc.extracted_text || activeDoc.cleanedText || activeDoc.title}\n\n`
+    : '';
+
   const historyText = history.length
     ? `[Prior Conversation History]:\n${history.map((m) => `${m.sender}: ${m.text}`).join('\n')}\n\n`
     : '';
 
   return {
-    systemInstruction: `You are the ascess-1-ai Copilot—an expert AI assistant specializing in web accessibility, WCAG 2.1 standards, text simplification, translations, document summarization, and inclusive user interface design. Be helpful, concise, context-aware, and structured. Use Markdown formatting when appropriate.`,
-    prompt: `${historyText}[User Message]: ${query}`,
+    systemInstruction: `You are ascess-1-ai—an intelligent AI Accessibility Assistant.
+Your core mission is to empower all users through web accessibility analysis, document intelligence, WCAG 2.1 AAA compliance guidance, OCR processing, translations, text simplification, and inclusive UI design.
+
+Key Responsibilities & Capabilities:
+- WCAG 2.1 AA/AAA Color Contrast, Keyboard Navigation, and Focus Indicator Guidance
+- Document & PDF / Image Q&A and Context Understanding
+- Screen Reader (NVDA / JAWS) Alt Text Generation & Aria Attribute Advice
+- Multi-Language Translation (14 Languages)
+- Text Simplification & Dyslexia-Friendly Explanations
+- Accessibility Audit Reports & Remediation Guidance
+
+Rules:
+1. If an Active Uploaded Document Context is attached, answer questions directly based on that document context.
+2. Format all responses using structured Markdown with section headings, bullet points, and code snippets where relevant.
+3. Maintain a warm, welcoming, inclusive, and expert tone. Avoid brief 1-line fallbacks.`,
+    prompt: `${docContext}${historyText}[User Question]: ${query}`,
   };
 };
