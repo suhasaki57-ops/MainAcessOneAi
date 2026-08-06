@@ -24,8 +24,20 @@ app.use(express.json({ limit: '16kb' }));
 app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 app.use(cookieParser());
 
-// Health Check Endpoint
+// Root & Health Check Endpoints
+app.get('/', (req, res) => {
+  res.status(200).json(new ApiResponse(200, { service: 'ascess-1-ai Backend API', status: 'online', health: '/api/health' }, 'ascess-1-ai Backend API is running successfully!'));
+});
+
+app.get('/api', (req, res) => {
+  res.status(200).json(new ApiResponse(200, { service: 'ascess-1-ai Backend API', status: 'online' }, 'ascess-1-ai API Router is active'));
+});
+
 app.get('/health', (req, res) => {
+  res.status(200).json(new ApiResponse(200, { status: 'healthy', timestamp: new Date() }, 'Backend API Operational'));
+});
+
+app.get('/api/health', (req, res) => {
   res.status(200).json(new ApiResponse(200, { status: 'healthy', timestamp: new Date() }, 'Backend API Operational'));
 });
 
