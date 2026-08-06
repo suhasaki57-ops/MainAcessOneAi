@@ -48,6 +48,18 @@ I can help you:
 
 Upload a document or ask me anything to get started.`;
 
+const sanitizeTextResponse = (raw) => {
+  if (!raw) return '';
+  let str = typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
+
+  // Rejoin vertical character breaks (e.g. "L\ne\n \na\n \nh\nr\n.") into continuous words ("Le / a / hr.")
+  str = str.replace(/([a-zA-Z0-9])\n([a-zA-Z0-9])/g, '$1$2');
+  str = str.replace(/([a-zA-Z0-9])\s*\n\s*([a-zA-Z0-9])/g, '$1$2');
+  str = str.replace(/\n{3,}/g, '\n\n');
+
+  return str.trim();
+};
+
 export const AIChatPage = () => {
   const [messages, setMessages] = useState([
     {
@@ -209,7 +221,7 @@ export const AIChatPage = () => {
       const aiResponse = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: typeof reply === 'string' ? reply : JSON.stringify(reply),
+        text: sanitizeTextResponse(reply),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, aiResponse]);
