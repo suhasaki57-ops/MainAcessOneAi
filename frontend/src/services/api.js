@@ -1,6 +1,16 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (import.meta.env.PROD) {
+    return '/api';
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -25,7 +35,15 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     const status = error.response?.status;
-    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
+    let message = error.response?.data?.message;
+
+    if (!message) {
+      if (error.message === 'Network Error' || !error.response) {
+        message = 'Network Error: Backend server is unreachable. Please set VITE_API_URL in environment settings.';
+      } else {
+        message = error.message || 'An unexpected error occurred';
+      }
+    }
 
     if (status === 401) {
       localStorage.removeItem('token');
