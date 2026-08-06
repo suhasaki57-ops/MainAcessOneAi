@@ -1,11 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { aiService } from '../services/aiService';
+import { documentService } from '../services/documentService';
 import { useNotification } from '../context/NotificationContext';
-import { FiCpu, FiSend, FiPaperclip, FiMic, FiUser, FiPlus, FiMessageSquare, FiTrash2, FiRotateCcw, FiCopy, FiFileText, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
+import {
+  FiCpu,
+  FiSend,
+  FiPaperclip,
+  FiMic,
+  FiUser,
+  FiPlus,
+  FiMessageSquare,
+  FiTrash2,
+  FiRotateCcw,
+  FiCopy,
+  FiFileText,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiX,
+  FiCheckCircle,
+} from 'react-icons/fi';
 
 const SUGGESTIONS = [
   'Summarize my document',
@@ -42,8 +59,11 @@ export const AIChatPage = () => {
   ]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [activeDocContext, setActiveDocContext] = useState(null);
   const [failedQuery, setFailedQuery] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const fileInputRef = useRef(null);
   const { addToast } = useNotification();
 
   useEffect(() => {
@@ -55,15 +75,95 @@ export const AIChatPage = () => {
     }
   }, []);
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', file.name);
+
+      const uploadRes = await documentService.uploadFile(formData);
+      const uploadedDoc = uploadRes.data || uploadRes;
+
+      const docRecord = {
+        id: uploadedDoc.id || Date.now().toString(),
+        title: uploadedDoc.title || file.name,
+        extracted_text: uploadedDoc.extractedText || uploadedDoc.cleanedText || file.name,
+        cleanedText: uploadedDoc.cleanedText || uploadedDoc.extractedText || file.name,
+        fileSize: file.size,
+      };
+
+      setActiveDocContext(docRecord);
+      localStorage.setItem('ascess_active_doc', JSON.stringify(docRecord));
+
+      const sysMsg = {
+        id: Date.now().toString(),
+        sender: 'ai',
+        text: `📎 **Document Attached**: Successfully ingested **"${docRecord.title}"** (${(file.size / 1024).toFixed(1)} KB).\n\nYou can now ask me questions, request summaries, or analyze accessibility directly from this document!`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setMessages((prev) => [...prev, sysMsg]);
+      addToast({ message: `Attached "${docRecord.title}" to AI Context!`, type: 'success' });
+    } catch (err) {
+      addToast({ message: err.message || 'File attachment failed.', type: 'error' });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      addToast({ message: 'Voice input is not supported in this browser. Please type your query.', type: 'warning' });
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    if (!isRecording) {
+      setIsRecording(true);
+      addToast({ message: '🎙️ Listening... Speak your query now.', type: 'info' });
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsRecording(false);
+        addToast({ message: `Voice captured: "${transcript}"`, type: 'success' });
+      };
+
+      recognition.onerror = () => {
+        setIsRecording(false);
+        addToast({ message: 'Voice recognition failed. Try typing.', type: 'error' });
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+    } else {
+      recognition.stop();
+      setIsRecording(false);
+    }
+  };
+
   const handleSend = async (textToSend) => {
     const query = textToSend || input;
     if (!query.trim()) return;
 
     setFailedQuery(null);
 
-    // Document Empty State Check
     const lowerQ = query.toLowerCase();
-    const isDocQuery = lowerQ.includes('summarize my document') || lowerQ.includes('explain this paragraph') || lowerQ.includes('answer questions from uploaded');
+    const isDocQuery =
+      lowerQ.includes('summarize my document') ||
+      lowerQ.includes('explain this paragraph') ||
+      lowerQ.includes('answer questions from uploaded');
 
     if (isDocQuery && !activeDocContext) {
       const userMsg = {
@@ -75,7 +175,7 @@ export const AIChatPage = () => {
       const emptyStateResponse = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: `⚠️ **No document uploaded yet.**\n\nPlease upload a PDF, image, or website URL from the **Upload & OCR** section to begin automated document analysis.`,
+        text: `⚠️ **No document uploaded yet.**\n\nPlease click the paperclip 📎 icon below or upload a file from **Upload & OCR** to begin automated document analysis.`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, userMsg, emptyStateResponse]);
@@ -144,6 +244,15 @@ export const AIChatPage = () => {
   return (
     <DashboardLayout>
       <div className="flex h-[calc(100vh-140px)] gap-4 overflow-hidden max-w-6xl mx-auto">
+        {/* Hidden File Input for Paperclip Button */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept=".pdf,.png,.jpg,.jpeg,.webp,.txt"
+          className="hidden"
+        />
+
         {/* History Drawer Sidebar */}
         <div className="hidden lg:flex flex-col w-64 glass-card rounded-2xl p-3 border border-slate-800 gap-2 shrink-0">
           <Button onClick={handleClear} variant="outline" size="sm" className="w-full justify-start gap-2 text-xs">
@@ -169,7 +278,7 @@ export const AIChatPage = () => {
               <span className="text-cyan-400 font-semibold text-xs flex items-center gap-1.5"><FiCpu /> ascess-1-ai Accessibility Assistant</span>
               {activeDocContext ? (
                 <Badge variant="info" className="flex items-center gap-1 text-[10px]">
-                  <FiFileText /> Document: {activeDocContext.title}
+                  <FiFileText /> Context: {activeDocContext.title}
                 </Badge>
               ) : (
                 <Badge variant="warning" className="text-[10px]">No Active Document</Badge>
@@ -251,12 +360,39 @@ export const AIChatPage = () => {
               </div>
             ))}
 
+            {isUploading && (
+              <div className="flex items-center gap-3 text-xs text-cyan-400 font-medium p-2 animate-pulse">
+                <FiRefreshCw className="animate-spin text-base" /> Uploading & OCR processing file attachment...
+              </div>
+            )}
+
             {isThinking && (
               <div className="flex items-center gap-3 text-xs text-cyan-400 font-medium p-2 animate-pulse">
                 <FiCpu className="animate-spin text-base" /> ascess-1-ai Accessibility Assistant is analyzing...
               </div>
             )}
           </div>
+
+          {/* Active Attachment Chip Banner */}
+          {activeDocContext && (
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs text-cyan-300 mb-2">
+              <div className="flex items-center gap-2 truncate">
+                <FiPaperclip className="text-cyan-400" />
+                <span className="font-semibold">Attached Context:</span>
+                <span className="truncate">{activeDocContext.title}</span>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('ascess_active_doc');
+                  setActiveDocContext(null);
+                  addToast({ message: 'Attachment removed.', type: 'info' });
+                }}
+                className="text-slate-400 hover:text-red-400 p-1"
+              >
+                <FiX />
+              </button>
+            </div>
+          )}
 
           {/* Clickable Suggested Questions */}
           <div className="flex flex-wrap gap-1.5 py-2 border-t border-slate-800/60">
@@ -292,11 +428,26 @@ export const AIChatPage = () => {
                 className="w-full px-4 py-3 rounded-xl glass-input text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 border border-slate-700/60 pr-20"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400">
-                <button type="button" className="hover:text-cyan-400 text-sm"><FiPaperclip /></button>
-                <button type="button" className="hover:text-cyan-400 text-sm"><FiMic /></button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  title="Attach PDF, Image, or Text File"
+                  className="hover:text-cyan-400 text-base p-1 transition-colors"
+                >
+                  <FiPaperclip className={isUploading ? 'animate-spin text-cyan-400' : ''} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleVoiceInput}
+                  title="Voice Input Q&A"
+                  className={`hover:text-cyan-400 text-base p-1 transition-colors ${isRecording ? 'text-red-400 animate-pulse' : ''}`}
+                >
+                  <FiMic />
+                </button>
               </div>
             </div>
-            <Button type="submit" disabled={isThinking} className="px-5 py-3 flex items-center gap-2">
+            <Button type="submit" disabled={isThinking || isUploading} className="px-5 py-3 flex items-center gap-2">
               <FiSend /> Send
             </Button>
           </form>
