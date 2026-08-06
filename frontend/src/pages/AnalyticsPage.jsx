@@ -7,47 +7,45 @@ import { accessibilityService } from '../services/accessibilityService';
 import {
   FiTrendingUp,
   FiFileText,
-  FiGlobe,
   FiCpu,
   FiAlertTriangle,
-  FiCheckCircle,
   FiBarChart2,
-  FiCalendar,
   FiDownload
 } from 'react-icons/fi';
 
 export const AnalyticsPage = () => {
+  const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState({
-    averageScore: 94.8,
+    averageScore: 0,
     scoreTrend: [
-      { date: 'Mon', score: 88 },
-      { date: 'Tue', score: 91 },
-      { date: 'Wed', score: 90 },
-      { date: 'Thu', score: 93 },
-      { date: 'Fri', score: 95 },
-      { date: 'Sat', score: 94 },
-      { date: 'Sun', score: 96 },
+      { date: 'Mon', score: 0 },
+      { date: 'Tue', score: 0 },
+      { date: 'Wed', score: 0 },
+      { date: 'Thu', score: 0 },
+      { date: 'Fri', score: 0 },
+      { date: 'Sat', score: 0 },
+      { date: 'Sun', score: 0 },
     ],
     documentTypeBreakdown: [
-      { type: 'PDF Files', count: 42, percentage: 45 },
-      { type: 'Web URLs', count: 28, percentage: 30 },
-      { type: 'Images (OCR)', count: 14, percentage: 15 },
-      { type: 'Plain Text', count: 10, percentage: 10 },
+      { type: 'PDF Files', count: 0, percentage: 0 },
+      { type: 'Web URLs', count: 0, percentage: 0 },
+      { type: 'Images (OCR)', count: 0, percentage: 0 },
+      { type: 'Plain Text', count: 0, percentage: 0 },
     ],
     languageBreakdown: [
-      { language: 'English', count: 64 },
-      { language: 'Spanish', count: 18 },
-      { language: 'Telugu', count: 12 },
-      { language: 'Hindi', count: 8 },
+      { language: 'English', count: 0 },
+      { language: 'Spanish', count: 0 },
+      { language: 'Telugu', count: 0 },
+      { language: 'Hindi', count: 0 },
     ],
     weeklyAIUsage: {
-      simplifications: 124,
-      translations: 86,
-      audits: 48,
-      copilotQueries: 210,
+      simplifications: 0,
+      translations: 0,
+      audits: 0,
+      copilotQueries: 0,
     },
-    criticalIssuesFound: 3,
-    totalAuditsRun: 94,
+    criticalIssuesFound: 0,
+    totalAuditsRun: 0,
   });
 
   useEffect(() => {
@@ -55,12 +53,30 @@ export const AnalyticsPage = () => {
   }, []);
 
   const fetchAnalytics = async () => {
+    setLoading(true);
     try {
       const res = await accessibilityService.getAnalytics();
       const data = res.data || res;
-      if (data.averageScore) setAnalytics(data);
+      if (data && typeof data === 'object') {
+        setAnalytics((prev) => ({
+          ...prev,
+          ...data,
+          averageScore: data.averageScore ?? prev.averageScore,
+          totalAuditsRun: data.totalAuditsRun ?? prev.totalAuditsRun,
+          criticalIssuesFound: data.criticalIssuesFound ?? prev.criticalIssuesFound,
+          scoreTrend: Array.isArray(data.scoreTrend) && data.scoreTrend.length ? data.scoreTrend : prev.scoreTrend,
+          documentTypeBreakdown: Array.isArray(data.documentTypeBreakdown) && data.documentTypeBreakdown.length ? data.documentTypeBreakdown : prev.documentTypeBreakdown,
+          languageBreakdown: Array.isArray(data.languageBreakdown) && data.languageBreakdown.length ? data.languageBreakdown : prev.languageBreakdown,
+          weeklyAIUsage: {
+            ...prev.weeklyAIUsage,
+            ...(data.weeklyAIUsage || {}),
+          },
+        }));
+      }
     } catch (err) {
       console.warn('Analytics fetch note:', err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,8 +100,12 @@ export const AnalyticsPage = () => {
               <span className="text-xs text-slate-400 font-semibold uppercase">Avg Accessibility Score</span>
               <FiTrendingUp className="text-cyan-400 text-base" />
             </div>
-            <div className="text-3xl font-extrabold text-cyan-400">{analytics.averageScore} / 100</div>
-            <Badge variant="success" className="w-fit">+4.2% from last week</Badge>
+            <div className="text-3xl font-extrabold text-cyan-400">
+              {analytics.averageScore > 0 ? `${analytics.averageScore} / 100` : '0 / 100'}
+            </div>
+            <Badge variant={analytics.averageScore > 0 ? "success" : "info"} className="w-fit">
+              {analytics.averageScore > 0 ? `${analytics.averageScore}% score evaluated` : 'No audit score evaluated yet'}
+            </Badge>
           </Card>
 
           <Card className="flex flex-col gap-2">
@@ -103,7 +123,9 @@ export const AnalyticsPage = () => {
               <FiAlertTriangle className="text-red-400 text-base" />
             </div>
             <div className="text-3xl font-extrabold text-red-400">{analytics.criticalIssuesFound}</div>
-            <Badge variant="warning" className="w-fit">2 Pending Remediation</Badge>
+            <Badge variant={analytics.criticalIssuesFound > 0 ? "warning" : "success"} className="w-fit">
+              {analytics.criticalIssuesFound > 0 ? `${analytics.criticalIssuesFound} Pending Remediation` : '0 Pending Remediation'}
+            </Badge>
           </Card>
 
           <Card className="flex flex-col gap-2">
@@ -111,7 +133,7 @@ export const AnalyticsPage = () => {
               <span className="text-xs text-slate-400 font-semibold uppercase">AI Copilot Queries</span>
               <FiCpu className="text-cyan-400 text-base" />
             </div>
-            <div className="text-3xl font-extrabold text-cyan-400">{analytics.weeklyAIUsage.copilotQueries}</div>
+            <div className="text-3xl font-extrabold text-cyan-400">{analytics.weeklyAIUsage?.copilotQueries || 0}</div>
             <span className="text-[11px] text-slate-500">Active assistant conversations</span>
           </Card>
         </div>
@@ -136,7 +158,7 @@ export const AnalyticsPage = () => {
                   </div>
                   <div
                     className="w-full bg-gradient-to-t from-cyan-600 to-cyan-400 rounded-t-lg group-hover:brightness-125 transition-all"
-                    style={{ height: `${(item.score / 100) * 160}px` }}
+                    style={{ height: `${item.score > 0 ? (item.score / 100) * 160 : 4}px` }}
                   />
                   <span className="text-[11px] text-slate-400 font-medium">{item.date}</span>
                 </div>
@@ -187,19 +209,19 @@ export const AnalyticsPage = () => {
             <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
                 <span className="text-slate-500 block text-[10px] uppercase">Simplifications</span>
-                <span className="text-base font-bold text-white">{analytics.weeklyAIUsage.simplifications}</span>
+                <span className="text-base font-bold text-white">{analytics.weeklyAIUsage?.simplifications || 0}</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
                 <span className="text-slate-500 block text-[10px] uppercase">Translations</span>
-                <span className="text-base font-bold text-white">{analytics.weeklyAIUsage.translations}</span>
+                <span className="text-base font-bold text-white">{analytics.weeklyAIUsage?.translations || 0}</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
                 <span className="text-slate-500 block text-[10px] uppercase">Audits Performed</span>
-                <span className="text-base font-bold text-white">{analytics.weeklyAIUsage.audits}</span>
+                <span className="text-base font-bold text-white">{analytics.weeklyAIUsage?.audits || 0}</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
                 <span className="text-slate-500 block text-[10px] uppercase">Copilot Queries</span>
-                <span className="text-base font-bold text-cyan-400">{analytics.weeklyAIUsage.copilotQueries}</span>
+                <span className="text-base font-bold text-cyan-400">{analytics.weeklyAIUsage?.copilotQueries || 0}</span>
               </div>
             </div>
           </Card>
@@ -210,3 +232,4 @@ export const AnalyticsPage = () => {
 };
 
 export default AnalyticsPage;
+
