@@ -3,8 +3,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder_key';
+const rawUrl = process.env.SUPABASE_URL || '';
+const isPlaceholder = !rawUrl || rawUrl.includes('your-supabase-project') || rawUrl.includes('placeholder');
+
+const supabaseUrl = isPlaceholder ? 'https://xyzcompany.supabase.co' : rawUrl;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummykey';
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
