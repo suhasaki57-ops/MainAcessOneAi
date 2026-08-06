@@ -1,4 +1,4 @@
-import { getGeminiModel } from './geminiClient.js';
+import { getGeminiModel, CANDIDATE_MODELS } from './geminiClient.js';
 import {
   buildSimplifierPrompt,
   buildTranslationPrompt,
@@ -288,11 +288,10 @@ const analyzeDynamicOCR = (text = '') => {
   };
 };
 
-const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gemini-1.5-flash', taskType = 'general', activeDoc = null) => {
+const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gemini-2.0-flash', taskType = 'general', activeDoc = null) => {
   console.log(`\n🔍 [DEBUG 4] Gemini Request Prompt (${taskType}):`, promptText.slice(0, 150));
 
-  if (!env.geminiApiKey || env.geminiApiKey === 'your-gemini-api-key') {
-    console.log('⚠️ [DEBUG 4.1] Gemini API Key unconfigured - using offline fallback pipeline');
+  const runFallbackPipeline = () => {
     if (taskType === 'translation') {
       const targetLang = systemInstruction.replace(/.*Translate the provided text into ([^\.]+).*/, '$1') || 'Spanish';
       return translateOfflineDictionary(promptText, targetLang);
@@ -302,16 +301,30 @@ const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gem
     }
     const dynamicRes = analyzeDynamicOCR(promptText);
     return JSON.stringify(dynamicRes);
+  };
+
+  if (!env.geminiApiKey || env.geminiApiKey === 'your-gemini-api-key') {
+    console.log('⚠️ [DEBUG 4.1] Gemini API Key unconfigured - using offline fallback pipeline');
+    return runFallbackPipeline();
   }
 
-  return await withRetry(async () => {
-    const model = getGeminiModel(modelName);
-    const result = await model.generateContent(`${systemInstruction}\n\n${promptText}`);
-    const response = await result.response;
-    const textOut = response.text();
-    console.log('🔍 [DEBUG 5] Gemini Response Received:', textOut.slice(0, 150));
-    return textOut;
-  });
+  const modelsToTry = Array.from(new Set([modelName, ...CANDIDATE_MODELS]));
+
+  for (const modelToTry of modelsToTry) {
+    try {
+      const model = getGeminiModel(modelToTry);
+      const result = await model.generateContent(`${systemInstruction}\n\n${promptText}`);
+      const response = await result.response;
+      const textOut = response.text();
+      console.log(`🔍 [DEBUG 5] Gemini Response Received (using ${modelToTry}):`, textOut.slice(0, 150));
+      return textOut;
+    } catch (err) {
+      console.warn(`⚠️ Model '${modelToTry}' error: ${err.message}. Trying next candidate model...`);
+    }
+  }
+
+  console.warn('⚠️ All Gemini API models failed or returned 404. Falling back to built-in AI Engine.');
+  return runFallbackPipeline();
 };
 
 const parseJSONOrFallback = (rawText, fallbackObj) => {
