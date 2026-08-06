@@ -34,9 +34,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    const status = error.response?.status;
     let message = error.response?.data?.message;
     if (!message) {
-      if (error.message === 'Network Error' || !error.response) {
+      if (status === 404) {
+        message = 'API Endpoint Not Found (404). Please set VITE_API_URL in Vercel settings to your live backend URL.';
+      } else if (error.message === 'Network Error' || !error.response) {
         message = 'Network Error: Backend server is unreachable. Please set VITE_API_URL in environment settings.';
       } else {
         message = error.message || 'An unexpected error occurred';

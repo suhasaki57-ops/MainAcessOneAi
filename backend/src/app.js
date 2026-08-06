@@ -42,6 +42,14 @@ app.get('/api/health', (req, res) => {
 });
 
 // Dual API Route Mounts for maximum client compatibility
+app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
+app.use('/ai', aiRoutes);
+app.use('/documents', documentRoutes);
+app.use('/accessibility', accessibilityRoutes);
+app.use('/history', historyRoutes);
+app.use('/v1', apiRouter);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/ai', aiRoutes);
