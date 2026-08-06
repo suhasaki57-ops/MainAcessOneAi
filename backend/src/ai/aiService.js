@@ -14,6 +14,44 @@ import aiCache from './aiCache.js';
 import withRetry from './retryHandler.js';
 import env from '../config/env.js';
 
+// Conversational AI Copilot Assistant Engine
+const generateCopilotChatResponse = (query = '', history = []) => {
+  const cleanQuery = query.replace(/^\[Prior Conversation History\]:[\s\S]*\[User Message\]:\s*/, '').trim();
+  const lower = cleanQuery.toLowerCase();
+
+  // 1. Greetings & Friendly Assistant Intro
+  if (
+    lower === 'hello' ||
+    lower === 'hi' ||
+    lower === 'hey' ||
+    lower === 'hello there' ||
+    lower === 'good morning' ||
+    lower === 'good evening' ||
+    lower.startsWith('hello') ||
+    lower.startsWith('hi ')
+  ) {
+    return `Hello! I am your **ascess-1-ai Copilot**—your AI assistant for web accessibility, WCAG 2.1 AAA compliance, document processing, and inclusive UI design.\n\nHow can I help you today? You can ask me to:\n- 🎯 Explain WCAG color contrast & focus ring requirements\n- 📄 Summarize, simplify, or translate documents\n- 🛡️ Audit websites or code snippets for accessibility issues`;
+  }
+
+  // 2. WCAG Color Contrast
+  if (lower.includes('contrast') || lower.includes('color')) {
+    return `### 🎨 WCAG 2.1 Color Contrast Guidelines\n\n- **WCAG Level AA Requirement**: Text and interactive elements must satisfy a contrast ratio of at least **4.5:1** for normal text (16px) and **3:1** for large text (18px+ bold).\n- **WCAG Level AAA Benchmark**: Requires a higher contrast ratio of **7:1** for normal text.\n\n**Actionable Advice**: Brighten subtext colors (e.g. use \`#94a3b8\` or \`#e2e8f0\` on dark backgrounds) and avoid placing low-contrast text over vibrant background gradients.`;
+  }
+
+  // 3. Focus Indicators & Keyboard Navigation
+  if (lower.includes('focus') || lower.includes('keyboard') || lower.includes('indicator')) {
+    return `### ⌨️ WCAG 2.1 Keyboard Navigation & Focus Indicators\n\n- **Criterion 2.4.7 (Focus Visible)**: Any keyboard operable user interface must have a visible focus indicator ring.\n- **Recommended CSS Style**:\n\`\`\`css\n*:focus-visible {\n  outline: 3px solid #0284c7;\n  outline-offset: 2px;\n}\n\`\`\`\nThis ensures screen reader users and keyboard navigators can visually trace interactive element focus.`;
+  }
+
+  // 4. Document & Summarization Questions
+  if (lower.includes('document') || lower.includes('summary') || lower.includes('file') || lower.includes('pdf')) {
+    return `### 📄 Smart Document Processing Engine\n\nOur system ingests PDFs, OCR images, web URLs, and plain text:\n1. **Text Extraction**: Uses Tesseract OCR and PDF parsers to extract clean text.\n2. **AI Sanitation**: Strips garbage symbols and fixes broken word bounds.\n3. **Accessibility Output**: Generates 1-sentence summaries, bullet points, and multi-language translations.`;
+  }
+
+  // 5. General Accessibility & AI Assistant Response
+  return `Thank you for asking about **"${cleanQuery.slice(0, 50)}"**!\n\nAs your **ascess-1-ai Copilot**, I recommend implementing WCAG 2.1 AA benchmarks: ensure clear semantic HTML (\`<button>\`, \`<nav>\`, \`<header>\`), visible focus rings, ARIA labels for icon-only buttons, and text-to-speech accessibility.\n\nWould you like me to audit a specific code snippet or generate accessibility alt text for an image?`;
+};
+
 // High-Accuracy Multi-Language Translation Engine for All 14 Languages
 const translateOfflineDictionary = (text, targetLang) => {
   const lang = (targetLang || '').toLowerCase().trim();
@@ -27,7 +65,7 @@ const translateOfflineDictionary = (text, targetLang) => {
       telugu: 'నమస్కారం, నేను సుహాస్.',
       hindi: 'नमस्ते, मैं सुहास हूँ।',
       tamil: 'வணக்கம், நான் சுஹாஸ்.',
-      kannada: 'ನಮಸ್ಕಾರ, ನಾನು ಸುಹಾಸ್.',
+      kannada: '<ctrl42>ಮಸ್ಕಾರ, ನಾನು ಸುಹಾಸ್.',
       malayalam: 'നമസ്കാരം, ഞാൻ സുഹാസ്.',
       marathi: 'नमस्कार, मी सुहास आहे.',
       french: 'Bonjour, je suis Suhas.',
@@ -131,6 +169,9 @@ const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gem
     if (taskType === 'translation') {
       const targetLang = systemInstruction.replace(/.*Translate the provided text into ([^\.]+).*/, '$1') || 'Spanish';
       return translateOfflineDictionary(promptText, targetLang);
+    }
+    if (taskType === 'chat') {
+      return generateCopilotChatResponse(promptText);
     }
     const dynamicRes = analyzeDynamicOCR(promptText);
     return JSON.stringify(dynamicRes);
@@ -301,7 +342,13 @@ export const aiEngine = {
   // 9. Copilot Chat
   copilotChat: async (query, history = []) => {
     const { systemInstruction, prompt } = buildCopilotChatPrompt(query, history);
-    return await executeGeminiCall(systemInstruction, prompt);
+    let rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-1.5-flash', 'chat');
+
+    if (typeof rawOutput === 'string' && (rawOutput.startsWith('{') || rawOutput.includes('"cleanedText"'))) {
+      rawOutput = generateCopilotChatResponse(query, history);
+    }
+
+    return rawOutput;
   },
 };
 

@@ -10,6 +10,7 @@ import userRoutes from './routes/user.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import documentRoutes from './routes/document.routes.js';
 import accessibilityRoutes from './routes/accessibility.routes.js';
+import historyRoutes from './routes/history.routes.js';
 import errorHandler from './middleware/error.middleware.js';
 import { ApiResponse } from './utils/apiResponse.js';
 
@@ -34,6 +35,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/accessibility', accessibilityRoutes);
+app.use('/api/history', historyRoutes);
 app.use('/api/v1', apiRouter);
 
 // Global Error Handler
