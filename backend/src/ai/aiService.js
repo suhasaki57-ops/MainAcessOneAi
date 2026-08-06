@@ -105,24 +105,7 @@ const translateOfflineDictionary = (text, targetLang) => {
   const cleanInput = cleanContent(text);
   const lowerInput = cleanInput.toLowerCase().trim();
 
-  const translations = {
-    french: {
-      'hello good morning': 'Bonjour, bon matin',
-      'good morning': 'Bonjour',
-      'good afternoon': 'Bon après-midi',
-      'good evening': 'Bonsoir',
-      'good night': 'Bonne nuit',
-      'hello': 'Bonjour',
-      'hi': 'Salut',
-      'how are you': 'Comment allez-vous ?',
-      'thank you': 'Merci beaucoup',
-      'welcome': 'Bienvenue',
-      'yes': 'Oui',
-      'no': 'Non',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': "ascess-1-ai est une plateforme accessible propulsée par l'IA pour tous.",
-      'hello i am suhas': 'Bonjour, je suis Suhas.',
-      'my name is suhas': 'Mon nom est Suhas.',
-    },
+  const dictionary = {
     spanish: {
       'hello good morning': 'Hola, buenos días',
       'good morning': 'Buenos días',
@@ -131,14 +114,115 @@ const translateOfflineDictionary = (text, targetLang) => {
       'good night': 'Buenas noches',
       'hello': 'Hola',
       'hi': 'Hola',
+      'hey': 'Hola',
       'how are you': '¿Cómo estás?',
-      'thank you': 'Muchas gracias',
+      'thank you very much': 'Muchas gracias',
+      'thank you': 'Gracias',
+      'thanks': 'Gracias',
       'welcome': 'Bienvenido',
       'yes': 'Sí',
       'no': 'No',
+      'please': 'Por favor',
       'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai es una plataforma accesible basada en inteligencia artificial para todos.',
       'hello i am suhas': 'Hola, soy Suhas.',
       'my name is suhas': 'Mi nombre es Suhas.',
+      'this is a test': 'Esta es una prueba',
+      'this is an accessible platform': 'Esta es una plataforma accesible',
+      'this': 'esta',
+      'is': 'es',
+      'a': 'una',
+      'an': 'una',
+      'the': 'el',
+      'test': 'prueba',
+      'sample': 'muestra',
+      'text': 'texto',
+      'document': 'documento',
+      'file': 'archivo',
+      'accessible': 'accesible',
+      'accessibility': 'accesibilidad',
+      'platform': 'plataforma',
+      'system': 'sistema',
+      'application': 'aplicación',
+      'website': 'sitio web',
+      'for': 'para',
+      'everyone': 'todos',
+      'all': 'todos',
+      'user': 'usuario',
+      'people': 'personas',
+      'my': 'mi',
+      'name': 'nombre',
+      'your': 'tu',
+      'translate': 'traducir',
+      'translation': 'traducción',
+      'language': 'idioma',
+      'good': 'bueno',
+      'great': 'genial',
+      'fine': 'bien',
+      'how': 'cómo',
+      'what': 'qué',
+      'where': 'dónde',
+      'when': 'cuándo',
+      'why': 'por qué',
+      'who': 'quién',
+    },
+    french: {
+      'hello good morning': 'Bonjour, bon matin',
+      'good morning': 'Bonjour',
+      'good afternoon': 'Bon après-midi',
+      'good evening': 'Bonsoir',
+      'good night': 'Bonne nuit',
+      'hello': 'Bonjour',
+      'hi': 'Salut',
+      'hey': 'Salut',
+      'how are you': 'Comment allez-vous ?',
+      'thank you very much': 'Merci beaucoup',
+      'thank you': 'Merci',
+      'thanks': 'Merci',
+      'welcome': 'Bienvenue',
+      'yes': 'Oui',
+      'no': 'Non',
+      'please': "S'il vous plaît",
+      'ascess-1-ai is an accessible, ai-powered platform for everyone.': "ascess-1-ai est une plateforme accessible propulsée par l'IA pour tous.",
+      'hello i am suhas': 'Bonjour, je suis Suhas.',
+      'my name is suhas': 'Mon nom est Suhas.',
+      'this is a test': 'Ceci est un test',
+      'this is an accessible platform': "C'est une plateforme accessible",
+      'this': 'ceci',
+      'is': 'est',
+      'a': 'un',
+      'an': 'un',
+      'the': 'le',
+      'test': 'test',
+      'sample': 'échantillon',
+      'text': 'texte',
+      'document': 'document',
+      'file': 'fichier',
+      'accessible': 'accessible',
+      'accessibility': 'accessibilité',
+      'platform': 'plateforme',
+      'system': 'système',
+      'application': 'application',
+      'website': 'site web',
+      'for': 'pour',
+      'everyone': 'tous',
+      'all': 'tous',
+      'user': 'utilisateur',
+      'people': 'gens',
+      'my': 'mon',
+      'name': 'nom',
+      'your': 'votre',
+      'translate': 'traduire',
+      'translation': 'traduction',
+      'language': 'langue',
+      'good': 'bon',
+      'great': 'super',
+      'fine': 'bien',
+      'how': 'comment',
+      'what': 'quoi',
+      'where': 'où',
+      'when': 'quand',
+      'why': 'pourquoi',
+      'who': 'qui',
     },
     telugu: {
       'hello good morning': 'నమస్కారం, శుభోదయం',
@@ -151,13 +235,30 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'మీరు ఎలా ఉన్నారు?',
       'thank you': 'ధన్యవాదాలు',
       'welcome': 'స్వాగతం',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai అనేది అందరికీ అందుబాటులో ఉండే AI-పవర్డ్ ప్లాట్‌ఫారమ్.',
-      'hello i am suhas': 'నమస్కారం, నేను సుహాస్.',
+      'this is a test': 'ఇది ఒక పరీక్ష',
+      'this': 'ఇది',
+      'is': 'అవుతుంది',
+      'a': 'ఒక',
+      'test': 'పరీక్ష',
+      'text': 'పాఠ్యాంశం',
+      'document': 'పత్రం',
+      'accessible': 'అందుబాటులో ఉన్న',
+      'accessibility': 'యాక్సెసిబిలిటీ',
+      'platform': 'ప్లాట్‌ఫారమ్',
+      'for': 'కొరకు',
+      'everyone': 'అందరికీ',
+      'all': 'అందరూ',
+      'user': 'వినియోగదారు',
+      'name': 'పేరు',
+      'good': 'మంచి',
+      'great': 'గొప్ప',
+      'yes': 'అవును',
+      'no': 'కాదు',
     },
     hindi: {
       'hello good morning': 'नमस्ते, शुभ प्रभात',
       'good morning': 'शुभ प्रभात',
-      'good afternoon': 'नमस्कार',
+      'good afternoon': 'शुभ दोपहर',
       'good evening': 'शुभ संध्या',
       'good night': 'शुभ रात्रि',
       'hello': 'नमस्ते',
@@ -165,8 +266,24 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'आप कैसे हैं?',
       'thank you': 'धन्यवाद',
       'welcome': 'स्वागत है',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai सभी के लिए एक सुलभ, AI-संचालित प्लेटफॉर्म है।',
-      'hello i am suhas': 'नमस्ते, मैं सुहास हूँ।',
+      'this is a test': 'यह एक परीक्षण है',
+      'this': 'यह',
+      'is': 'है',
+      'a': 'एक',
+      'test': 'परीक्षण',
+      'text': 'पाठ',
+      'document': 'दस्तावेज़',
+      'accessible': 'सुलभ',
+      'accessibility': 'सुलभता',
+      'platform': 'मंच',
+      'for': 'के लिए',
+      'everyone': 'सभी',
+      'user': 'उपयोगकर्ता',
+      'name': 'नाम',
+      'good': 'अच्छा',
+      'great': 'महान',
+      'yes': 'हाँ',
+      'no': 'नहीं',
     },
     tamil: {
       'hello good morning': 'வணக்கம், காலை வணக்கம்',
@@ -179,8 +296,22 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'எப்படி இருக்கிறீர்கள்?',
       'thank you': 'நன்றி',
       'welcome': 'நல்வரவு',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai அனைவருக்கும் அணுகக்கூடிய, AI-இயக்கப்படும் தளமாகும்.',
-      'hello i am suhas': 'வணக்கம், நான் சுஹாஸ்.',
+      'this is a test': 'இது ஒரு சோதனை',
+      'this': 'இது',
+      'is': 'ஆகும்',
+      'a': 'ஒரு',
+      'test': 'சோதனை',
+      'text': 'உரை',
+      'document': 'ஆவணம்',
+      'accessible': 'அணுகக்கூடிய',
+      'platform': 'தளம்',
+      'for': 'மக்களுக்கு',
+      'everyone': 'அனைவருக்கும்',
+      'user': 'பயனர்',
+      'name': 'பெயர்',
+      'good': 'நல்ல',
+      'yes': 'ஆம்',
+      'no': 'இல்லை',
     },
     kannada: {
       'hello good morning': 'ನಮಸ್ಕಾರ, ಶುಭೋದಯ',
@@ -193,8 +324,22 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'ಹೇಗಿದ್ದೀರಿ?',
       'thank you': 'ಧನ್ಯವಾದಗಳು',
       'welcome': 'ಸ್ವಾಗತ',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai ಪ್ರತಿಯೊಬ್ಬರಿಗೂ ಪ್ರವೇಶಿಸಬಹುದಾದ AI-ಚಾಲಿತ ವೇದಿಕೆಯಾಗಿದೆ.',
-      'hello i am suhas': 'ನಮಸ್ಕಾರ, ನಾನು ಸುಹಾಸ್.',
+      'this is a test': 'ಇದು ಒಂದು ಪರೀಕ್ಷೆ',
+      'this': 'ಇದು',
+      'is': 'ಆಗಿದೆ',
+      'a': 'ಒಂದು',
+      'test': 'ಪರೀಕ್ಷೆ',
+      'text': 'ಪಠ್ಯ',
+      'document': 'ದಾಖಲೆ',
+      'accessible': 'ಪ್ರವೇಶಿಸಬಹುದಾದ',
+      'platform': 'ವೇದಿಕೆ',
+      'for': 'ಗಾಗಿ',
+      'everyone': 'ಪ್ರತಿಯೊಬ್ಬರಿಗೂ',
+      'user': 'ಬಳಕೆದಾರ',
+      'name': 'ಹೆಸರು',
+      'good': 'ಉತ್ತಮ',
+      'yes': 'ಹೌದು',
+      'no': 'ಇಲ್ಲ',
     },
     malayalam: {
       'hello good morning': 'നമസ്കാരം, സുപ്രഭാതം',
@@ -207,8 +352,18 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'സുഖമാണോ?',
       'thank you': 'നന്ദി',
       'welcome': 'സ്വാഗതം',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai ഏവർക്കും പ്രാപ്യമായ AI-പ്രവർത്തിത പ്ലാറ്റ്‌ഫോമാണ്.',
-      'hello i am suhas': 'നമസ്കാരം, ഞാൻ സുഹാസ്.',
+      'this is a test': 'ഇതൊരു പരീക്ഷണമാണ്',
+      'this': 'ഇത്',
+      'test': 'പരീക്ഷണം',
+      'text': 'ടെക്സ്റ്റ്',
+      'document': 'രേഖ',
+      'accessible': 'പ്രാപ്യമായ',
+      'platform': 'പ്ലാറ്റ്‌ഫോം',
+      'everyone': 'ഏവർക്കും',
+      'user': 'ഉപയോക്താവ്',
+      'good': 'നല്ല',
+      'yes': 'അതെ',
+      'no': 'ഇല്ല',
     },
     marathi: {
       'hello good morning': 'नमस्कार, शुभ प्रभात',
@@ -221,8 +376,20 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'तुम्ही कसे आहात?',
       'thank you': 'धन्यवाद',
       'welcome': 'स्वागत आहे',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai हे सर्वांसाठी एक प्रवेशयोग्य AI-संचालित प्लॅटफॉर्म आहे.',
-      'hello i am suhas': 'नमस्कार, मी सुहास आहे.',
+      'this is a test': 'ही एक चाचणी आहे',
+      'this': 'ही',
+      'is': 'आहे',
+      'a': 'एक',
+      'test': 'चाचणी',
+      'text': 'मजकूर',
+      'document': 'दस्तऐवज',
+      'accessible': 'प्रवेशयोग्य',
+      'platform': 'प्लॅटफॉर्म',
+      'everyone': 'सर्वांसाठी',
+      'user': 'वापरकर्ता',
+      'good': 'चांगले',
+      'yes': 'होय',
+      'no': 'नाही',
     },
     urdu: {
       'hello good morning': 'سلام، صبح بخیر',
@@ -235,7 +402,20 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'آپ کیسے ہیں؟',
       'thank you': 'شکریہ',
       'welcome': 'خوش آمدید',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai سب کے لیے ایک قابل رسائی AI پلیٹ فارم ہے۔',
+      'this is a test': 'یہ ایک ٹیسٹ ہے',
+      'this': 'یہ',
+      'is': 'ہے',
+      'a': 'ایک',
+      'test': 'ٹیسٹ',
+      'text': 'متن',
+      'document': 'دستاویز',
+      'accessible': 'قابل رسائی',
+      'platform': 'پلیٹ فارم',
+      'everyone': 'سب کے لیے',
+      'user': 'صارف',
+      'good': 'اچھا',
+      'yes': 'جی ہاں',
+      'no': 'نہیں۔',
     },
     german: {
       'hello good morning': 'Guten Morgen, hallo',
@@ -248,8 +428,22 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'Wie geht es Ihnen?',
       'thank you': 'Vielen Dank',
       'welcome': 'Willkommen',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai ist eine barrierefreie, KI-gestützte Plattform für alle.',
-      'hello i am suhas': 'Hallo, ich bin Suhas.',
+      'this is a test': 'Dies ist ein Test',
+      'this': 'dies',
+      'is': 'ist',
+      'a': 'ein',
+      'an': 'ein',
+      'the': 'das',
+      'test': 'Test',
+      'text': 'Text',
+      'document': 'Dokument',
+      'accessible': 'barrierefreie',
+      'platform': 'Plattform',
+      'everyone': 'alle',
+      'user': 'Benutzer',
+      'good': 'gut',
+      'yes': 'ja',
+      'no': 'nein',
     },
     japanese: {
       'hello good morning': 'おはようございます',
@@ -262,8 +456,19 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'お元気ですか？',
       'thank you': 'ありがとうございます',
       'welcome': 'ようこそ',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai は、すべての人のためのアクセシブルなAI搭載プラットフォームです。',
-      'hello i am suhas': 'こんにちは、私は Suhas です。',
+      'this is a test': 'これはテストです',
+      'this': 'これ',
+      'is': 'です',
+      'test': 'テスト',
+      'text': 'テキスト',
+      'document': 'ドキュメント',
+      'accessible': 'アクセシブルな',
+      'platform': 'プラットフォーム',
+      'everyone': 'すべての人',
+      'user': 'ユーザー',
+      'good': '良い',
+      'yes': 'はい',
+      'no': 'いいえ',
     },
     chinese: {
       'hello good morning': '早上好，你好',
@@ -276,8 +481,20 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': '你好吗？',
       'thank you': '谢谢你',
       'welcome': '欢迎',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai 是一个适合所有人的无障碍 AI 平台。',
-      'hello i am suhas': '你好，我是 Suhas。',
+      'this is a test': '这是一个测试',
+      'this': '这',
+      'is': '是',
+      'a': '一个',
+      'test': '测试',
+      'text': '文本',
+      'document': '文档',
+      'accessible': '无障碍',
+      'platform': '平台',
+      'everyone': '所有人',
+      'user': '用户',
+      'good': '好',
+      'yes': '是的',
+      'no': '不',
     },
     arabic: {
       'hello good morning': 'صباح الخير، مرحبا',
@@ -290,8 +507,20 @@ const translateOfflineDictionary = (text, targetLang) => {
       'how are you': 'كيف حالك؟',
       'thank you': 'شكرا جزيلا',
       'welcome': 'أهلا بك',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai هو منصة إمكانية الوصول المدعومة بالذكاء الاصطناعي للجميع.',
-      'hello i am suhas': 'مرحبا، أنا سوهاس.',
+      'this is a test': 'هذا اختبار',
+      'this': 'هذا',
+      'is': 'هو',
+      'a': 'اختبار',
+      'test': 'اختبار',
+      'text': 'نص',
+      'document': 'مستند',
+      'accessible': 'إمكانية الوصول',
+      'platform': 'منصة',
+      'everyone': 'الجميع',
+      'user': 'مستخدم',
+      'good': 'جيد',
+      'yes': 'نعم',
+      'no': 'لا',
     },
     english: {
       'hello good morning': 'Hello, good morning',
@@ -300,27 +529,70 @@ const translateOfflineDictionary = (text, targetLang) => {
     },
   };
 
-  const targetMap = translations[lang];
-  if (targetMap && targetMap[lowerInput]) {
+  const targetMap = dictionary[lang] || dictionary.spanish;
+
+  // 1. Direct exact match
+  if (targetMap[lowerInput]) {
     return targetMap[lowerInput];
   }
 
-  // Word/Phrase replacement logic for multi-word inputs
-  if (targetMap) {
-    let resultText = lowerInput;
-    let replacedAny = false;
-    for (const [key, value] of Object.entries(targetMap)) {
-      if (key.length > 2 && resultText.includes(key)) {
-        resultText = resultText.replace(new RegExp(key, 'gi'), value);
-        replacedAny = true;
+  // 2. Longest phrase substitution loop
+  let processed = lowerInput;
+  let matchesFound = 0;
+  const sortedKeys = Object.keys(targetMap).sort((a, b) => b.length - a.length);
+
+  for (const key of sortedKeys) {
+    if (processed.includes(key)) {
+      const regex = new RegExp(`\\b${key}\\b`, 'gi');
+      if (regex.test(processed)) {
+        processed = processed.replace(regex, targetMap[key]);
+        matchesFound++;
       }
-    }
-    if (replacedAny) {
-      return resultText;
     }
   }
 
-  return cleanInput;
+  if (matchesFound > 0) {
+    return processed.charAt(0).toUpperCase() + processed.slice(1);
+  }
+
+  // 3. Token-level translation for arbitrary sentences
+  const tokens = cleanInput.split(/(\s+|[^\w\s]+)/);
+  const translatedTokens = tokens.map((token) => {
+    const cleanToken = token.toLowerCase().trim();
+    if (!cleanToken || /^[^\w\s]+$/.test(cleanToken)) {
+      return token;
+    }
+    if (targetMap[cleanToken]) {
+      return targetMap[cleanToken];
+    }
+    return token;
+  });
+
+  const tokenizedOutput = translatedTokens.join('');
+  if (tokenizedOutput !== cleanInput) {
+    return tokenizedOutput;
+  }
+
+  // 4. Default clean fallback format for unknown custom sentences
+  const langNames = {
+    spanish: 'español',
+    french: 'français',
+    telugu: 'తెలుగు',
+    hindi: 'हिंदी',
+    tamil: 'தமிழ்',
+    kannada: 'ಕನ್ನಡ',
+    malayalam: 'മലയാളം',
+    marathi: 'मराठी',
+    urdu: 'اردو',
+    german: 'Deutsch',
+    japanese: '日本語',
+    chinese: '中文',
+    arabic: 'العربية',
+    english: 'English',
+  };
+
+  const formattedLangName = langNames[lang] || targetLang;
+  return `[${formattedLangName}]: ${cleanInput}`;
 };
 
 // High-Precision Document & Web Content Classifier Fallback
@@ -471,7 +743,7 @@ export const aiEngine = {
 
   // 2. Translation
   translateText: async (text, targetLang) => {
-    const cacheKey = `translate_${targetLang}`;
+    const cacheKey = `translate_${targetLang}_${text}`;
     const cached = aiCache.get(text, cacheKey);
     if (cached) return cached;
 
@@ -482,6 +754,10 @@ export const aiEngine = {
       rawOutput = translateOfflineDictionary(text, targetLang);
     } else if (typeof rawOutput === 'string') {
       rawOutput = rawOutput.replace(/^(?:Traduction en [^:]+:|Traducción al [^:]+:|[\w\s]+ Translation:)\s*/i, '').trim();
+    }
+
+    if (!rawOutput || rawOutput.trim().toLowerCase() === text.trim().toLowerCase()) {
+      rawOutput = translateOfflineDictionary(text, targetLang);
     }
 
     aiCache.set(text, cacheKey, rawOutput);
