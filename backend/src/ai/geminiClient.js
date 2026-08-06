@@ -1,8 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import env from '../config/env.js';
 
-const genAI = new GoogleGenerativeAI(env.geminiApiKey || 'mock_key');
-
 export const CANDIDATE_MODELS = [
   'gemini-2.0-flash',
   'gemini-1.5-flash-latest',
@@ -12,7 +10,9 @@ export const CANDIDATE_MODELS = [
 ];
 
 export const getGeminiModel = (modelName = 'gemini-2.0-flash') => {
-  return genAI.getGenerativeModel({ model: modelName });
+  const apiKey = env.geminiApiKey || process.env.GEMINI_API_KEY;
+  const client = new GoogleGenerativeAI(apiKey || '');
+  return client.getGenerativeModel({ model: modelName });
 };
 
 export default genAI;

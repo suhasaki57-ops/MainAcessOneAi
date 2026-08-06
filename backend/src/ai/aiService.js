@@ -11,862 +11,161 @@ import {
   buildCopilotChatPrompt,
 } from './promptBuilder.js';
 import aiCache from './aiCache.js';
-import withRetry from './retryHandler.js';
 import env from '../config/env.js';
-import { cleanContent } from '../services/document/contentCleaner.js';
 
-// Conversational AI Accessibility Assistant Engine
-const generateCopilotChatResponse = (query = '', history = [], activeDoc = null) => {
-  let docTitle = activeDoc?.title || '';
-  let extractedDocText = activeDoc?.extracted_text || activeDoc?.cleanedText || '';
-  let userQuestion = query;
+// Core Gemini API Execution Engine (Pure Live Gemini Model Linkage)
+const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gemini-2.0-flash') => {
+  const apiKey = env.geminiApiKey || process.env.GEMINI_API_KEY;
 
-  if (query.includes('[Active Uploaded Document Context]:') || query.includes('[Active Document Context]:')) {
-    const docMatch = query.match(/\[Active (?:Uploaded )?Document Context\]:\s*Title:\s*([^\n]+)\s*(?:Extracted Content|Content):\s*([\s\S]*?)(?=\[User Question\]|\[Prior Conversation History\]|$)/i);
-    if (docMatch) {
-      docTitle = docTitle || docMatch[1].trim();
-      extractedDocText = extractedDocText || docMatch[2].trim();
-    }
-  }
-
-  if (query.includes('[User Question]:')) {
-    userQuestion = query.split('[User Question]:').pop().trim();
-  }
-
-  const lowerQ = userQuestion.toLowerCase().trim();
-  const hasDoc = Boolean(docTitle || extractedDocText || activeDoc);
-
-  if (
-    lowerQ === 'hello' ||
-    lowerQ === 'hi' ||
-    lowerQ === 'hey' ||
-    lowerQ === 'hello there' ||
-    lowerQ === 'good morning' ||
-    lowerQ === 'good evening' ||
-    lowerQ.startsWith('hello') ||
-    lowerQ.startsWith('hi ')
-  ) {
-    return `👋 Welcome to **ascess-1-ai**!\n\nI'm your **AI Accessibility Assistant**.\n\nI can help you:\n• Analyze documents\n• Explain PDFs & images\n• Improve WCAG accessibility\n• Simplify complex text\n• Translate content\n• Generate screen reader alt text\n\nUpload a document or ask me anything to get started!`;
-  }
-
-  if (hasDoc) {
-    const title = docTitle || 'Attached Document';
-    const sampleText = extractedDocText || 'Extracted document layout processed successfully.';
-
-    if (lowerQ.includes('what is this document about') || lowerQ.includes('about') || lowerQ.includes('what is this')) {
-      return `### 📄 Document Analysis for "${title}"\n\n**Document Subject & Content**:\n${sampleText}\n\n**Overview**:\nThis document **"${title}"** contains extracted text and layout structure ingested from your uploaded file. All content has been sanitized and prepared for accessibility audit and summary.`;
-    }
-
-    if (lowerQ.includes('summarize') || lowerQ.includes('pdf') || lowerQ.includes('summary')) {
-      return `### 📄 PDF Document Summary for "${title}"\n\n**Executive Summary**:\n${sampleText.slice(0, 250)}...\n\n**Key Highlights**:\n• **PDF Title**: ${title}\n• **Extracted Content**: Structure, headings, and text paragraphs analyzed\n• **Accessibility Rating**: 94% Screen Reader & TTS Ready.`;
-    }
-
-    if (lowerQ.includes('translate')) {
-      return `### 🌐 Content Translation for "${title}"\n\n**Original Content**:\n${sampleText.slice(0, 150)}...\n\n**Spanish Translation**:\n"Resumen y contenido del documento ${title}: Texto extraído y optimizado para accesibilidad universal."`;
-    }
-
-    if (lowerQ.includes('accessibility problems') || lowerQ.includes('problem') || lowerQ.includes('issue') || lowerQ.includes('check accessibility')) {
-      return `### 🛡️ Accessibility Problems & Audit for "${title}"\n\n**Audit Findings for "${title}"**:\n• **Heading Structure**: Preserved with semantic \`###\` Markdown headers.\n• **Font Readability**: Grade 8 reading level achieved (Clear vocabulary).\n• **Color Contrast**: 4.5:1 AA contrast ratio satisfied.\n• **Screen Reader Support**: Document text is fully parseable by NVDA and JAWS screen readers.`;
-    }
-
-    if (lowerQ.includes('explain') || lowerQ.includes('paragraph')) {
-      return `### 📄 Paragraph & Content Explanation for "${title}"\n\n**Extracted Document Content**:\n${sampleText}\n\n**Detailed Analysis**:\n• **Core Meaning**: This document section outlines essential details and specifications for **${title}**.\n• **Key Takeaways**: All text elements have been sanitized and formatted for optimal screen reader playback.`;
-    }
-
-    if (lowerQ.includes('alt text') || lowerQ.includes('image')) {
-      return `### 🖼️ Screen Reader Alt Text for "${title}"\n\n- **Short Alt Text**: "Document graphic presenting ${title}."\n- **Detailed Alt Text**: "Comprehensive visual element showing ${title} with extracted layout structure."\n- **Screen Reader Variant**: "${title} document element."`;
-    }
-
-    if (lowerQ.includes('readability') || lowerQ.includes('simplify')) {
-      return `### 📖 Readability Optimization for "${title}"\n\n**Simplified Plain Language Content**:\n${sampleText}\n\n**Key Improvements**:\n• Converted complex technical phrasing into clear everyday language.\n• Shortened paragraph length for easier visual scanning.`;
-    }
-
-    return `### 📄 Document Intelligence Analysis for "${title}"\n\n**Extracted Document Text**:\n${sampleText.slice(0, 300)}...\n\n**AI Assistant Note**: I am analyzing your attached document **"${title}"**. Ask me to summarize, simplify, check accessibility, or generate alt text!`;
-  }
-
-  if (lowerQ.includes('contrast') || lowerQ.includes('color')) {
-    return `### 🎨 WCAG 2.1 Color Contrast Guidelines\n\n- **WCAG Level AA Requirement**: Text and interactive elements must satisfy a contrast ratio of at least **4.5:1** for normal text (16px) and **3:1** for large text (18px+ bold).\n- **WCAG Level AAA Benchmark**: Requires a higher contrast ratio of **7:1** for normal text.\n\n**Actionable Advice**: Brighten subtext colors (e.g. use \`#94a3b8\` or \`#e2e8f0\` on dark backgrounds) and avoid placing low-contrast text over vibrant background gradients.`;
-  }
-
-  if (lowerQ.includes('focus') || lowerQ.includes('keyboard') || lowerQ.includes('indicator')) {
-    return `### ⌨️ WCAG 2.1 Keyboard Navigation & Focus Indicators\n\n- **Criterion 2.4.7 (Focus Visible)**: Any keyboard operable user interface must have a visible focus indicator ring.\n- **Recommended CSS Style**:\n\`\`\`css\n*:focus-visible {\n  outline: 3px solid #0284c7;\n  outline-offset: 2px;\n}\n\`\`\`\nThis ensures screen reader users and keyboard navigators can visually trace interactive element focus.`;
-  }
-
-  if (lowerQ.includes('alt text') || lowerQ.includes('image')) {
-    return `### 🖼️ Accessibility Alt Text Best Practices\n\n- **Concise Alt Text**: Keep alternative text descriptions under 125 characters.\n- **Screen Reader Optimization**: Avoid redundant phrases like "image of" or "photo showing".\n- **Decorative Images**: Use empty alt text (\`alt=""\`) for purely decorative visual elements so screen readers skip them smoothly.`;
-  }
-
-  return `### 🛡️ AI Accessibility Guidance on "${userQuestion.slice(0, 45)}"\n\nAs your **ascess-1-ai Assistant**, I recommend implementing WCAG 2.1 AA standards:\n- **Semantic Structure**: Use proper HTML5 landmark tags (\`<main>\`, \`<nav>\`, \`<header>\`, \`<section>\`).\n- **Interactive Contrast**: Ensure buttons and links achieve at least 4.5:1 contrast against background cards.\n- **Keyboard Accessibility**: Ensure all clickable elements can be tabbed to with visible focus rings.\n\nWould you like me to analyze a specific document, code snippet, or generate an accessibility audit report?`;
-};
-
-// Production-Grade Offline Multi-Language Translation Engine
-const translateOfflineDictionary = (text, targetLang) => {
-  const lang = (targetLang || 'Spanish').toLowerCase().trim();
-  const cleanInput = cleanContent(text);
-  const lowerInput = cleanInput.toLowerCase().trim();
-
-  const dictionary = {
-    spanish: {
-      'hello good morning': 'Hola, buenos días',
-      'good morning': 'Buenos días',
-      'good afternoon': 'Buenas tardes',
-      'good evening': 'Buenas noches',
-      'good night': 'Buenas noches',
-      'hello': 'Hola',
-      'hi': 'Hola',
-      'hey': 'Hola',
-      'how are you': '¿Cómo estás?',
-      'thank you very much': 'Muchas gracias',
-      'thank you': 'Gracias',
-      'thanks': 'Gracias',
-      'welcome': 'Bienvenido',
-      'yes': 'Sí',
-      'no': 'No',
-      'please': 'Por favor',
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': 'ascess-1-ai es una plataforma accesible basada en inteligencia artificial para todos.',
-      'hello i am suhas': 'Hola, soy Suhas.',
-      'my name is suhas': 'Mi nombre es Suhas.',
-      'this is a test': 'Esta es una prueba',
-      'this is an accessible platform': 'Esta es una plataforma accesible',
-      'this': 'esta',
-      'is': 'es',
-      'a': 'una',
-      'an': 'una',
-      'the': 'el',
-      'test': 'prueba',
-      'sample': 'muestra',
-      'text': 'texto',
-      'document': 'documento',
-      'file': 'archivo',
-      'accessible': 'accesible',
-      'accessibility': 'accesibilidad',
-      'platform': 'plataforma',
-      'system': 'sistema',
-      'application': 'aplicación',
-      'website': 'sitio web',
-      'for': 'para',
-      'everyone': 'todos',
-      'all': 'todos',
-      'user': 'usuario',
-      'people': 'personas',
-      'my': 'mi',
-      'name': 'nombre',
-      'your': 'tu',
-      'translate': 'traducir',
-      'translation': 'traducción',
-      'language': 'idioma',
-      'good': 'bueno',
-      'great': 'genial',
-      'fine': 'bien',
-      'how': 'cómo',
-      'what': 'qué',
-      'where': 'dónde',
-      'when': 'cuándo',
-      'why': 'por qué',
-      'who': 'quién',
-    },
-    french: {
-      'hello good morning': 'Bonjour, bon matin',
-      'good morning': 'Bonjour',
-      'good afternoon': 'Bon après-midi',
-      'good evening': 'Bonsoir',
-      'good night': 'Bonne nuit',
-      'hello': 'Bonjour',
-      'hi': 'Salut',
-      'hey': 'Salut',
-      'how are you': 'Comment allez-vous ?',
-      'thank you very much': 'Merci beaucoup',
-      'thank you': 'Merci',
-      'thanks': 'Merci',
-      'welcome': 'Bienvenue',
-      'yes': 'Oui',
-      'no': 'Non',
-      'please': "S'il vous plaît",
-      'ascess-1-ai is an accessible, ai-powered platform for everyone.': "ascess-1-ai est une plateforme accessible propulsée par l'IA pour tous.",
-      'hello i am suhas': 'Bonjour, je suis Suhas.',
-      'my name is suhas': 'Mon nom est Suhas.',
-      'this is a test': 'Ceci est un test',
-      'this is an accessible platform': "C'est une plateforme accessible",
-      'this': 'ceci',
-      'is': 'est',
-      'a': 'un',
-      'an': 'un',
-      'the': 'le',
-      'test': 'test',
-      'sample': 'échantillon',
-      'text': 'texte',
-      'document': 'document',
-      'file': 'fichier',
-      'accessible': 'accessible',
-      'accessibility': 'accessibilité',
-      'platform': 'plateforme',
-      'system': 'système',
-      'application': 'application',
-      'website': 'site web',
-      'for': 'pour',
-      'everyone': 'tous',
-      'all': 'tous',
-      'user': 'utilisateur',
-      'people': 'gens',
-      'my': 'mon',
-      'name': 'nom',
-      'your': 'votre',
-      'translate': 'traduire',
-      'translation': 'traduction',
-      'language': 'langue',
-      'good': 'bon',
-      'great': 'super',
-      'fine': 'bien',
-      'how': 'comment',
-      'what': 'quoi',
-      'where': 'où',
-      'when': 'quand',
-      'why': 'pourquoi',
-      'who': 'qui',
-    },
-    telugu: {
-      'hello good morning': 'నమస్కారం, శుభోదయం',
-      'good morning': 'శుభోదయం',
-      'good afternoon': 'శుభ మధ్యాహ్నం',
-      'good evening': 'శుభ సాయంత్రం',
-      'good night': 'శుభ రాత్రి',
-      'hello': 'నమస్కారం',
-      'hi': 'హాయ్',
-      'how are you': 'మీరు ఎలా ఉన్నారు?',
-      'thank you': 'ధన్యవాదాలు',
-      'welcome': 'స్వాగతం',
-      'this is a test': 'ఇది ఒక పరీక్ష',
-      'this': 'ఇది',
-      'is': 'అవుతుంది',
-      'a': 'ఒక',
-      'test': 'పరీక్ష',
-      'text': 'పాఠ్యాంశం',
-      'document': 'పత్రం',
-      'accessible': 'అందుబాటులో ఉన్న',
-      'accessibility': 'యాక్సెసిబిలిటీ',
-      'platform': 'ప్లాట్‌ఫారమ్',
-      'for': 'కొరకు',
-      'everyone': 'అందరికీ',
-      'all': 'అందరూ',
-      'user': 'వినియోగదారు',
-      'name': 'పేరు',
-      'good': 'మంచి',
-      'great': 'గొప్ప',
-      'yes': 'అవును',
-      'no': 'కాదు',
-    },
-    hindi: {
-      'hello good morning': 'नमस्ते, शुभ प्रभात',
-      'good morning': 'शुभ प्रभात',
-      'good afternoon': 'शुभ दोपहर',
-      'good evening': 'शुभ संध्या',
-      'good night': 'शुभ रात्रि',
-      'hello': 'नमस्ते',
-      'hi': 'नमस्ते',
-      'how are you': 'आप कैसे हैं?',
-      'thank you': 'धन्यवाद',
-      'welcome': 'स्वागत है',
-      'this is a test': 'यह एक परीक्षण है',
-      'this': 'यह',
-      'is': 'है',
-      'a': 'एक',
-      'test': 'परीक्षण',
-      'text': 'पाठ',
-      'document': 'दस्तावेज़',
-      'accessible': 'सुलभ',
-      'accessibility': 'सुलभता',
-      'platform': 'मंच',
-      'for': 'के लिए',
-      'everyone': 'सभी',
-      'user': 'उपयोगकर्ता',
-      'name': 'नाम',
-      'good': 'अच्छा',
-      'great': 'महान',
-      'yes': 'हाँ',
-      'no': 'नहीं',
-    },
-    tamil: {
-      'hello good morning': 'வணக்கம், காலை வணக்கம்',
-      'good morning': 'காலை வணக்கம்',
-      'good afternoon': 'மதிய வணக்கம்',
-      'good evening': 'மாலை வணக்கம்',
-      'good night': 'இனிய இரவு',
-      'hello': 'வணக்கம்',
-      'hi': 'வணக்கம்',
-      'how are you': 'எப்படி இருக்கிறீர்கள்?',
-      'thank you': 'நன்றி',
-      'welcome': 'நல்வரவு',
-      'this is a test': 'இது ஒரு சோதனை',
-      'this': 'இது',
-      'is': 'ஆகும்',
-      'a': 'ஒரு',
-      'test': 'சோதனை',
-      'text': 'உரை',
-      'document': 'ஆவணம்',
-      'accessible': 'அணுகக்கூடிய',
-      'platform': 'தளம்',
-      'for': 'மக்களுக்கு',
-      'everyone': 'அனைவருக்கும்',
-      'user': 'பயனர்',
-      'name': 'பெயர்',
-      'good': 'நல்ல',
-      'yes': 'ஆம்',
-      'no': 'இல்லை',
-    },
-    kannada: {
-      'hello good morning': 'ನಮಸ್ಕಾರ, ಶುಭೋದಯ',
-      'good morning': 'ಶುಭೋದಯ',
-      'good afternoon': 'ಶುಭ ಮಧ್ಯಾಹ್ನ',
-      'good evening': 'ಶುಭ ಸಂಜೆ',
-      'good night': 'ಶುಭ ರಾತ್ರಿ',
-      'hello': 'ನಮಸ್ಕಾರ',
-      'hi': 'ಹಾಯ್',
-      'how are you': 'ಹೇಗಿದ್ದೀರಿ?',
-      'thank you': 'ಧನ್ಯವಾದಗಳು',
-      'welcome': 'ಸ್ವಾಗತ',
-      'this is a test': 'ಇದು ಒಂದು ಪರೀಕ್ಷೆ',
-      'this': 'ಇದು',
-      'is': 'ಆಗಿದೆ',
-      'a': 'ಒಂದು',
-      'test': 'ಪರೀಕ್ಷೆ',
-      'text': 'ಪಠ್ಯ',
-      'document': 'ದಾಖಲೆ',
-      'accessible': 'ಪ್ರವೇಶಿಸಬಹುದಾದ',
-      'platform': 'ವೇದಿಕೆ',
-      'for': 'ಗಾಗಿ',
-      'everyone': 'ಪ್ರತಿಯೊಬ್ಬರಿಗೂ',
-      'user': 'ಬಳಕೆದಾರ',
-      'name': 'ಹೆಸರು',
-      'good': 'ಉತ್ತಮ',
-      'yes': 'ಹೌದು',
-      'no': 'ಇಲ್ಲ',
-    },
-    malayalam: {
-      'hello good morning': 'നമസ്കാരം, സുപ്രഭാതം',
-      'good morning': 'സുപ്രഭാതം',
-      'good afternoon': 'ശുഭ ഉച്ചസമയം',
-      'good evening': 'ശുഭ സായാഹ്നം',
-      'good night': 'ശുഭ രാത്രി',
-      'hello': 'നമസ്കാരം',
-      'hi': 'ഹായ്',
-      'how are you': 'സുഖമാണോ?',
-      'thank you': 'നന്ദി',
-      'welcome': 'സ്വാഗതം',
-      'this is a test': 'ഇതൊരു പരീക്ഷണമാണ്',
-      'this': 'ഇത്',
-      'test': 'പരീക്ഷണം',
-      'text': 'ടെക്സ്റ്റ്',
-      'document': 'രേഖ',
-      'accessible': 'പ്രാപ്യമായ',
-      'platform': 'പ്ലാറ്റ്‌ഫോം',
-      'everyone': 'ഏവർക്കും',
-      'user': 'ഉപയോക്താവ്',
-      'good': 'നല്ല',
-      'yes': 'അതെ',
-      'no': 'ഇല്ല',
-    },
-    marathi: {
-      'hello good morning': 'नमस्कार, शुभ प्रभात',
-      'good morning': 'शुभ प्रभात',
-      'good afternoon': 'शुभ दुपार',
-      'good evening': 'शुभ संध्याकाळ',
-      'good night': 'शुभ रात्री',
-      'hello': 'नमस्कार',
-      'hi': 'नमस्कार',
-      'how are you': 'तुम्ही कसे आहात?',
-      'thank you': 'धन्यवाद',
-      'welcome': 'स्वागत आहे',
-      'this is a test': 'ही एक चाचणी आहे',
-      'this': 'ही',
-      'is': 'आहे',
-      'a': 'एक',
-      'test': 'चाचणी',
-      'text': 'मजकूर',
-      'document': 'दस्तऐवज',
-      'accessible': 'प्रवेशयोग्य',
-      'platform': 'प्लॅटफॉर्म',
-      'everyone': 'सर्वांसाठी',
-      'user': 'वापरकर्ता',
-      'good': 'चांगले',
-      'yes': 'होय',
-      'no': 'नाही',
-    },
-    urdu: {
-      'hello good morning': 'سلام، صبح بخیر',
-      'good morning': 'صبح بخیر',
-      'good afternoon': 'سہ پہر بخیر',
-      'good evening': 'شام بخیر',
-      'good night': 'شب بخیر',
-      'hello': 'سلام',
-      'hi': 'سلام',
-      'how are you': 'آپ کیسے ہیں؟',
-      'thank you': 'شکریہ',
-      'welcome': 'خوش آمدید',
-      'this is a test': 'یہ ایک ٹیسٹ ہے',
-      'this': 'یہ',
-      'is': 'ہے',
-      'a': 'ایک',
-      'test': 'ٹیسٹ',
-      'text': 'متن',
-      'document': 'دستاویز',
-      'accessible': 'قابل رسائی',
-      'platform': 'پلیٹ فارم',
-      'everyone': 'سب کے لیے',
-      'user': 'صارف',
-      'good': 'اچھا',
-      'yes': 'جی ہاں',
-      'no': 'نہیں۔',
-    },
-    german: {
-      'hello good morning': 'Guten Morgen, hallo',
-      'good morning': 'Guten Morgen',
-      'good afternoon': 'Guten Tag',
-      'good evening': 'Guten Abend',
-      'good night': 'Gute Nacht',
-      'hello': 'Hallo',
-      'hi': 'Hallo',
-      'how are you': 'Wie geht es Ihnen?',
-      'thank you': 'Vielen Dank',
-      'welcome': 'Willkommen',
-      'this is a test': 'Dies ist ein Test',
-      'this': 'dies',
-      'is': 'ist',
-      'a': 'ein',
-      'an': 'ein',
-      'the': 'das',
-      'test': 'Test',
-      'text': 'Text',
-      'document': 'Dokument',
-      'accessible': 'barrierefreie',
-      'platform': 'Plattform',
-      'everyone': 'alle',
-      'user': 'Benutzer',
-      'good': 'gut',
-      'yes': 'ja',
-      'no': 'nein',
-    },
-    japanese: {
-      'hello good morning': 'おはようございます',
-      'good morning': 'おはようございます',
-      'good afternoon': 'こんにちは',
-      'good evening': 'こんばんは',
-      'good night': 'おやすみなさい',
-      'hello': 'こんにちは',
-      'hi': 'やあ',
-      'how are you': 'お元気ですか？',
-      'thank you': 'ありがとうございます',
-      'welcome': 'ようこそ',
-      'this is a test': 'これはテストです',
-      'this': 'これ',
-      'is': 'です',
-      'test': 'テスト',
-      'text': 'テキスト',
-      'document': 'ドキュメント',
-      'accessible': 'アクセシブルな',
-      'platform': 'プラットフォーム',
-      'everyone': 'すべての人',
-      'user': 'ユーザー',
-      'good': '良い',
-      'yes': 'はい',
-      'no': 'いいえ',
-    },
-    chinese: {
-      'hello good morning': '早上好，你好',
-      'good morning': '早上好',
-      'good afternoon': '下午好',
-      'good evening': '晚上好',
-      'good night': '晚安',
-      'hello': '你好',
-      'hi': '你好',
-      'how are you': '你好吗？',
-      'thank you': '谢谢你',
-      'welcome': '欢迎',
-      'this is a test': '这是一个测试',
-      'this': '这',
-      'is': '是',
-      'a': '一个',
-      'test': '测试',
-      'text': '文本',
-      'document': '文档',
-      'accessible': '无障碍',
-      'platform': '平台',
-      'everyone': '所有人',
-      'user': '用户',
-      'good': '好',
-      'yes': '是的',
-      'no': '不',
-    },
-    arabic: {
-      'hello good morning': 'صباح الخير، مرحبا',
-      'good morning': 'صباح الخير',
-      'good afternoon': 'مساء الخير',
-      'good evening': 'مساء الخير',
-      'good night': 'تصبح على خير',
-      'hello': 'مرحبا',
-      'hi': 'أهلا',
-      'how are you': 'كيف حالك؟',
-      'thank you': 'شكرا جزيلا',
-      'welcome': 'أهلا بك',
-      'this is a test': 'هذا اختبار',
-      'this': 'هذا',
-      'is': 'هو',
-      'a': 'اختبار',
-      'test': 'اختبار',
-      'text': 'نص',
-      'document': 'مستند',
-      'accessible': 'إمكانية الوصول',
-      'platform': 'منصة',
-      'everyone': 'الجميع',
-      'user': 'مستخدم',
-      'good': 'جيد',
-      'yes': 'نعم',
-      'no': 'لا',
-    },
-    english: {
-      'hello good morning': 'Hello, good morning',
-      'good morning': 'Good morning',
-      'hello': 'Hello',
-    },
-  };
-
-  const targetMap = dictionary[lang] || dictionary.spanish;
-
-  // 1. Direct exact match
-  if (targetMap[lowerInput]) {
-    return targetMap[lowerInput];
-  }
-
-  // 2. Longest phrase substitution loop
-  let processed = lowerInput;
-  let matchesFound = 0;
-  const sortedKeys = Object.keys(targetMap).sort((a, b) => b.length - a.length);
-
-  for (const key of sortedKeys) {
-    if (processed.includes(key)) {
-      const regex = new RegExp(`\\b${key}\\b`, 'gi');
-      if (regex.test(processed)) {
-        processed = processed.replace(regex, targetMap[key]);
-        matchesFound++;
-      }
-    }
-  }
-
-  if (matchesFound > 0) {
-    return processed.charAt(0).toUpperCase() + processed.slice(1);
-  }
-
-  // 3. Token-level translation for arbitrary sentences
-  const tokens = cleanInput.split(/(\s+|[^\w\s]+)/);
-  const translatedTokens = tokens.map((token) => {
-    const cleanToken = token.toLowerCase().trim();
-    if (!cleanToken || /^[^\w\s]+$/.test(cleanToken)) {
-      return token;
-    }
-    if (targetMap[cleanToken]) {
-      return targetMap[cleanToken];
-    }
-    return token;
-  });
-
-  const tokenizedOutput = translatedTokens.join('');
-  if (tokenizedOutput !== cleanInput) {
-    return tokenizedOutput;
-  }
-
-  // 4. Default clean fallback format for unknown custom sentences
-  const langNames = {
-    spanish: 'español',
-    french: 'français',
-    telugu: 'తెలుగు',
-    hindi: 'हिंदी',
-    tamil: 'தமிழ்',
-    kannada: 'ಕನ್ನಡ',
-    malayalam: 'മലയാളം',
-    marathi: 'मराठी',
-    urdu: 'اردو',
-    german: 'Deutsch',
-    japanese: '日本語',
-    chinese: '中文',
-    arabic: 'العربية',
-    english: 'English',
-  };
-
-  const formattedLangName = langNames[lang] || targetLang;
-  return `[${formattedLangName}]: ${cleanInput}`;
-};
-
-// High-Precision Document & Web Content Classifier Fallback
-const analyzeDynamicOCR = (text = '') => {
-  const cleaned = cleanContent(text);
-  if (!cleaned) return null;
-
-  const lower = cleaned.toLowerCase();
-
-  // 1. YouTube & Video Portal (UNTOUCHED)
-  if (lower.includes('youtube') || lower.includes('youtu.be')) {
-    return {
-      title: 'YouTube Video Streaming Platform',
-      cleanedText: cleaned,
-      shortSummary: 'Web page summary for YouTube Video & Media Platform. Features global video streaming, creator channels, live streams, and media content.',
-      bulletPoints: [
-        'Global HD Video & Audio Media Streaming',
-        'Creator Channels, Subscriptions & Custom Playlists',
-        'Trending Video Recommendations & Live Stream Events',
-        'User Interactive Comments, Likes & Channel Management',
-      ],
-    };
-  }
-
-  // 2. Freedom Refined Sunflower Oil Product Package Label (STRICT MATCHING)
-  if (
-    lower.includes('freedom oil') ||
-    lower.includes('sunflower oil') ||
-    lower.includes('gold winner oil')
-  ) {
-    return {
-      title: 'Freedom Refined Sunflower Oil',
-      cleanedText: `### Freedom Refined Sunflower Oil\n\nPremium Quality Refined Sunflower Oil crafted for healthy everyday cooking.\nFormulated with Low Absorb Technology to reduce oil absorption during cooking.\n\nProduct Specifications & Features:\n• 100% Pure Refined Sunflower Oil\n• Enriched with Essential Vitamins A, D & E\n• Low Absorb Technology & Zero Cholesterol\n• Sealed Fresh Tamper-Evident Packaging`,
-      shortSummary: 'Product packaging label for Freedom Refined Sunflower Oil. High-purity cooking oil enriched with Vitamins A & D, featuring Low Absorb Technology.',
-      bulletPoints: [
-        '100% Pure Refined Sunflower Oil',
-        'Low Absorb Technology & Zero Cholesterol',
-        'Enriched with Essential Vitamins A, D & E',
-        'Sealed Fresh Tamper-Evident Packaging',
-      ],
-    };
-  }
-
-  // 3. Dynamic Parser for Raw Text & General Product Documents (e.g. EchoStream Wireless Headphones)
-  const lines = cleaned.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
-
-  // Extract Title
-  let cleanTitle = 'Ingested Document Content';
-  const nameLine = lines.find((l) => l.toLowerCase().startsWith('product name:') || l.startsWith('###'));
-  if (nameLine) {
-    cleanTitle = nameLine.replace(/^product name:\s*/i, '').replace(/^###\s*/, '').trim();
-  } else if (lines.length > 0) {
-    cleanTitle = lines[0].slice(0, 50);
-  }
-
-  // Extract Summary / Overview
-  let overviewText = '';
-  const overviewIdx = lines.findIndex((l) => l.toLowerCase().startsWith('overview:'));
-  if (overviewIdx !== -1 && lines[overviewIdx + 1]) {
-    overviewText = lines[overviewIdx + 1];
-  } else {
-    overviewText = lines.find((l) => !l.toLowerCase().startsWith('product name:') && l.length > 30) || cleanTitle;
-  }
-
-  // Extract Bullet Points
-  const extractedBullets = lines
-    .filter((l) => l.startsWith('-') || l.startsWith('•') || l.startsWith('*'))
-    .map((l) => l.replace(/^[\-\•\*]\s*/, '').trim());
-
-  const bulletPoints =
-    extractedBullets.length > 0
-      ? extractedBullets.slice(0, 5)
-      : [
-          `Product Details: ${cleanTitle}`,
-          `Overview: ${overviewText.slice(0, 70)}`,
-          'Features and specifications parsed successfully.',
-        ];
-
-  return {
-    title: cleanTitle,
-    cleanedText: cleaned,
-    shortSummary: `Document Overview for "${cleanTitle}": ${overviewText.slice(0, 160)}.`,
-    bulletPoints,
-  };
-};
-
-const executeGeminiCall = async (systemInstruction, promptText, modelName = 'gemini-2.0-flash', taskType = 'general', activeDoc = null) => {
-  console.log(`\n🔍 [DEBUG 4] Gemini Request Prompt (${taskType}):`, promptText.slice(0, 150));
-
-  const runFallbackPipeline = () => {
-    if (taskType === 'translation') {
-      const targetLang = systemInstruction.replace(/.*Translate the provided text into ([^\.]+).*/, '$1') || 'Spanish';
-      return translateOfflineDictionary(promptText, targetLang);
-    }
-    if (taskType === 'chat') {
-      return generateCopilotChatResponse(promptText, [], activeDoc);
-    }
-    const dynamicRes = analyzeDynamicOCR(promptText);
-    return JSON.stringify(dynamicRes);
-  };
-
-  if (!env.geminiApiKey || env.geminiApiKey === 'your-gemini-api-key') {
-    console.log('⚠️ [DEBUG 4.1] Gemini API Key unconfigured - using offline fallback pipeline');
-    return runFallbackPipeline();
+  if (!apiKey || apiKey === 'your-gemini-api-key') {
+    throw new Error('GEMINI_API_KEY is unconfigured. Please configure a valid GEMINI_API_KEY in your backend environment variables.');
   }
 
   const modelsToTry = Array.from(new Set([modelName, ...CANDIDATE_MODELS]));
+  let lastError = null;
 
-  for (const modelToTry of modelsToTry) {
+  for (const candidateModel of modelsToTry) {
     try {
-      const model = getGeminiModel(modelToTry);
-      const result = await model.generateContent(`${systemInstruction}\n\n${promptText}`);
+      const model = getGeminiModel(candidateModel);
+      const fullPrompt = systemInstruction ? `${systemInstruction}\n\n${promptText}` : promptText;
+      const result = await model.generateContent(fullPrompt);
       const response = await result.response;
-      const textOut = response.text();
-      console.log(`🔍 [DEBUG 5] Gemini Response Received (using ${modelToTry}):`, textOut.slice(0, 150));
-      return textOut;
+      const textOutput = response.text();
+
+      if (textOutput && textOutput.trim().length > 0) {
+        return textOutput.trim();
+      }
     } catch (err) {
-      console.warn(`⚠️ Model '${modelToTry}' error: ${err.message}. Trying next candidate model...`);
+      lastError = err;
+      console.warn(`Gemini model '${candidateModel}' execution note: ${err.message}`);
     }
   }
 
-  console.warn('⚠️ All Gemini API models failed or returned 404. Falling back to built-in AI Engine.');
-  return runFallbackPipeline();
+  throw new Error(`Gemini AI service error: ${lastError?.message || 'Failed to generate response from Gemini AI'}`);
 };
 
-const parseJSONOrFallback = (rawText, fallbackObj) => {
+// Safe JSON parser for Gemini responses
+const parseGeminiJSON = (rawText) => {
+  if (typeof rawText !== 'string') return rawText;
+  const cleanJSON = rawText.replace(/```json\n?|\n?```/g, '').trim();
   try {
-    const cleanJSON = rawText.replace(/```json\n?|\n?```/g, '').trim();
     return JSON.parse(cleanJSON);
   } catch (err) {
-    console.warn('JSON parsing warning for AI response, constructing structural fallback:', err.message);
-    return fallbackObj || { result: rawText };
+    return { rawResponse: rawText };
   }
 };
 
 export const aiEngine = {
   // 1. Text Simplifier
   simplifyText: async (text, level = 'simple') => {
-    const cacheKey = `simplify_${level}`;
+    const cacheKey = `simplify_${level}_${text}`;
     const cached = aiCache.get(text, cacheKey);
     if (cached) return cached;
 
     const { systemInstruction, prompt } = buildSimplifierPrompt(text, level);
-    const rawOutput = await executeGeminiCall(systemInstruction, prompt);
-    aiCache.set(text, cacheKey, rawOutput);
-    return rawOutput;
+    const output = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
+    aiCache.set(text, cacheKey, output);
+    return output;
   },
 
-  // 2. Translation
+  // 2. Multi-Language Translator (Pure Gemini API Linkage)
   translateText: async (text, targetLang) => {
     const cacheKey = `translate_${targetLang}_${text}`;
     const cached = aiCache.get(text, cacheKey);
     if (cached) return cached;
 
     const { systemInstruction, prompt } = buildTranslationPrompt(text, targetLang);
-    let rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash', 'translation');
+    let output = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
 
-    if (typeof rawOutput === 'string' && (rawOutput.startsWith('{') || rawOutput.includes('"cleanedText"'))) {
-      rawOutput = translateOfflineDictionary(text, targetLang);
-    } else if (typeof rawOutput === 'string') {
-      rawOutput = rawOutput.replace(/^(?:Traduction en [^:]+:|Traducción al [^:]+:|[\w\s]+ Translation:)\s*/i, '').trim();
+    // Clean up any leading language prefixes if generated
+    if (typeof output === 'string') {
+      output = output.replace(/^(?:Traduction en [^:]+:|Traducción al [^:]+:|[\w\s]+ Translation:)\s*/i, '').trim();
     }
 
-    if (!rawOutput || rawOutput.trim().toLowerCase() === text.trim().toLowerCase()) {
-      rawOutput = translateOfflineDictionary(text, targetLang);
-    }
-
-    aiCache.set(text, cacheKey, rawOutput);
-    return rawOutput;
+    aiCache.set(text, cacheKey, output);
+    return output;
   },
 
-  // 3. Accessibility Analyzer
+  // 3. Accessibility Auditor
   analyzeAccessibility: async (text) => {
-    const cached = aiCache.get(text, 'analyze');
+    const cacheKey = `analyze_${text}`;
+    const cached = aiCache.get(text, cacheKey);
     if (cached) return cached;
 
     const { systemInstruction, prompt } = buildAccessibilityAnalyzerPrompt(text);
-    const rawOutput = await executeGeminiCall(systemInstruction, prompt);
-    const result = parseJSONOrFallback(rawOutput, {
-      readingLevel: 'Grade 8',
-      accessibilityScore: 92,
-      readingDifficulty: 'Moderate',
-      complexWords: ['specification', 'content'],
-      longSentences: [],
-      passiveVoiceInstances: [],
-      accessibilityProblems: ['Font contrast ratio below AAA threshold'],
-      suggestions: ['Increase text contrast ratio to 4.5:1.'],
-    });
+    const rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
+    const result = parseGeminiJSON(rawOutput);
 
-    aiCache.set(text, 'analyze', result);
+    aiCache.set(text, cacheKey, result);
     return result;
   },
 
   // 4. Alt Text Generator
   generateAltText: async (imageDescription) => {
+    const cacheKey = `alttext_${imageDescription}`;
+    const cached = aiCache.get(imageDescription, cacheKey);
+    if (cached) return cached;
+
     const { systemInstruction, prompt } = buildAltTextPrompt(imageDescription);
-    const rawOutput = await executeGeminiCall(systemInstruction, prompt);
-    return parseJSONOrFallback(rawOutput, {
-      shortAltText: `Image of ${imageDescription.slice(0, 80)}.`,
-      detailedAltText: `Detailed visual representation showing ${imageDescription.slice(0, 120)}.`,
-      screenReaderOptimized: `${imageDescription.slice(0, 100)} document package.`,
-    });
+    const rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
+    const result = parseGeminiJSON(rawOutput);
+
+    aiCache.set(imageDescription, cacheKey, result);
+    return result;
   },
 
-  // 5. OCR Clean & Understand
+  // 5. OCR Post-Processing Engine
   cleanOCRText: async (rawOCRText) => {
-    console.log('🔍 [DEBUG 2] Raw OCR Text Received by AI Service:', rawOCRText.slice(0, 150));
+    const cacheKey = `ocr_${rawOCRText}`;
+    const cached = aiCache.get(rawOCRText, cacheKey);
+    if (cached) return cached;
 
     const { systemInstruction, prompt } = buildOCRCleanPrompt(rawOCRText);
-    const rawOutput = await executeGeminiCall(systemInstruction, prompt);
-    const fallbackParsed = analyzeDynamicOCR(rawOCRText);
+    const rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
+    const result = parseGeminiJSON(rawOutput);
 
-    const result = parseJSONOrFallback(rawOutput, {
-      cleanedText: fallbackParsed?.cleanedText || cleanContent(rawOCRText),
-      summary: fallbackParsed?.shortSummary || `Processed document content`,
-      correctionsMade: ['Sanitized raw OCR noise symbols', 'Reconstructed document layout'],
-    });
-
-    console.log('🔍 [DEBUG 3] Cleaned OCR Result:', result.cleanedText.slice(0, 150));
+    aiCache.set(rawOCRText, cacheKey, result);
     return result;
   },
 
   // 6. Document Summarizer
   summarizeDocument: async (text) => {
+    const cacheKey = `summary_${text}`;
+    const cached = aiCache.get(text, cacheKey);
+    if (cached) return cached;
+
     const { systemInstruction, prompt } = buildSummarizerPrompt(text);
-    const rawOutput = await executeGeminiCall(systemInstruction, prompt);
-    const fallbackParsed = analyzeDynamicOCR(text);
+    const rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
+    const result = parseGeminiJSON(rawOutput);
 
-    const result = parseJSONOrFallback(rawOutput, {
-      shortSummary: fallbackParsed?.shortSummary || `Executive summary for ${fallbackParsed?.title || 'Ingested Content'}`,
-      detailedSummary: `Comprehensive document analysis covering extracted text content.`,
-      bulletPoints: fallbackParsed?.bulletPoints || [
-        'Extracted text details and specifications',
-        'Document layout processed',
-      ],
-      importantTakeaways: ['High readability document text extracted.'],
-      actionItems: ['Review document summary notes.'],
-    });
-
-    console.log('🔍 [DEBUG 6] Final AI Summary Result:', result.shortSummary);
+    aiCache.set(text, cacheKey, result);
     return result;
   },
 
-  // 7. Website Accessibility Advisor
+  // 7. Website Accessibility Auditor
   generateWebsiteReport: async (websiteContent) => {
+    const cacheKey = `web_audit_${websiteContent}`;
+    const cached = aiCache.get(websiteContent, cacheKey);
+    if (cached) return cached;
+
     const { systemInstruction, prompt } = buildWebsiteAdvisorPrompt(websiteContent);
-    const rawOutput = await executeGeminiCall(systemInstruction, prompt);
-    return parseJSONOrFallback(rawOutput, {
-      accessibilityScore: 94.8,
-      problems: ['1 button missing explicit aria-label'],
-      contrastSuggestions: ['Brighten subtext color to #94a3b8'],
-      missingAltTextSuggestions: ['Add alt attribute to brand logo'],
-      headingStructureSuggestions: ['Ensure single h1 tag on root layout'],
-      buttonLabelSuggestions: ['Add aria-label="Toggle mobile menu" to burger icon button'],
-      ariaSuggestions: ['Add aria-live="polite" to status alerts'],
-    });
+    const rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
+    const result = parseGeminiJSON(rawOutput);
+
+    aiCache.set(websiteContent, cacheKey, result);
+    return result;
   },
 
   // 8. Reading Assistant Q&A
   readingAssistant: async (text, query) => {
     const { systemInstruction, prompt } = buildReadingAssistantPrompt(text, query);
-    return await executeGeminiCall(systemInstruction, prompt);
+    return await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
   },
 
-  // 9. Copilot Chat
+  // 9. Gemini Copilot Chat
   copilotChat: async (query, history = [], activeDoc = null) => {
     const { systemInstruction, prompt } = buildCopilotChatPrompt(query, history, activeDoc);
-    let rawOutput = await executeGeminiCall(systemInstruction, prompt, 'gemini-1.5-flash', 'chat', activeDoc);
-
-    if (typeof rawOutput === 'string' && (rawOutput.startsWith('{') || rawOutput.includes('"cleanedText"'))) {
-      rawOutput = generateCopilotChatResponse(query, history, activeDoc);
-    }
-
-    return rawOutput;
+    return await executeGeminiCall(systemInstruction, prompt, 'gemini-2.0-flash');
   },
 };
 
