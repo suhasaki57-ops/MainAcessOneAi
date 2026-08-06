@@ -5,6 +5,7 @@ import { auditContent, auditWebsite } from '../services/accessibilityAudit/Acces
 import { exportReportToJSON, exportReportToMarkdown, exportReportToTXT } from '../services/accessibilityAudit/ExportService.js';
 import getAnalyticsData from '../services/accessibilityAudit/AnalyticsService.js';
 import db from '../supabase/database.js';
+import ActivityLogService from '../services/activityLogService.js';
 
 export const getAccessibilityPreferences = asyncHandler(async (req, res) => {
   const prefs = await getPreferences(req.user?.id);
@@ -13,6 +14,9 @@ export const getAccessibilityPreferences = asyncHandler(async (req, res) => {
 
 export const updateAccessibilityPreferences = asyncHandler(async (req, res) => {
   const updated = await updatePreferences(req.user?.id, req.body);
+
+  ActivityLogService.logSettingsUpdate(req.user?.id || 'demo-user-101', req.body, req);
+
   return res.status(200).json(new ApiResponse(200, updated, 'Accessibility preferences updated successfully'));
 });
 
@@ -34,12 +38,19 @@ export const updateAccessibilityProfile = asyncHandler(async (req, res) => {
 export const runAudit = asyncHandler(async (req, res) => {
   const { text } = req.body;
   const result = await auditContent(text, req.user?.id);
+
+  ActivityLogService.logAudit(req.user?.id || 'demo-user-101', 'Submitted Content', result.score || 90, req);
+
   return res.status(200).json(new ApiResponse(200, result, 'Accessibility audit completed successfully'));
 });
 
 export const runWebsiteAudit = asyncHandler(async (req, res) => {
   const { url } = req.body;
   const result = await auditWebsite(url, req.user?.id);
+
+  ActivityLogService.logWebsiteScan(req.user?.id || 'demo-user-101', url, req);
+  ActivityLogService.logAudit(req.user?.id || 'demo-user-101', url, result.score || 85, req);
+
   return res.status(200).json(new ApiResponse(200, result, 'Website accessibility audit completed successfully'));
 });
 
@@ -72,6 +83,8 @@ export const exportReport = asyncHandler(async (req, res) => {
     exportedData = exportReportToTXT(report);
     res.setHeader('Content-Type', 'text/plain');
   }
+
+  ActivityLogService.logReportExport(req.user?.id || 'demo-user-101', format || 'PDF', req);
 
   return res.status(200).send(exportedData);
 });

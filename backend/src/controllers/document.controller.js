@@ -5,24 +5,34 @@ import { setActiveDocumentContext } from '../services/document/contextBuilder.js
 import { aiEngine } from '../ai/aiService.js';
 import { ApiError } from '../utils/apiError.js';
 import { ApiResponse } from '../utils/apiResponse.js';
+import ActivityLogService from '../services/activityLogService.js';
 
 export const uploadDocument = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new ApiError(400, 'Document file is required (PDF, Image, Text)');
   }
   const result = await processFileDocument(req.file, req.user?.id, req.body.title);
+
+  ActivityLogService.logUpload(req.user?.id || 'demo-user-101', req.file.originalname, req.file.mimetype, req.file.size, req);
+
   return res.status(201).json(new ApiResponse(201, result, 'Document uploaded and processed successfully'));
 });
 
 export const processUrl = asyncHandler(async (req, res) => {
   const { url } = req.body;
   const result = await processURLDocument(url, req.user?.id);
+
+  ActivityLogService.logWebsiteScan(req.user?.id || 'demo-user-101', url, req);
+
   return res.status(201).json(new ApiResponse(201, result, 'Website URL content scraped and saved'));
 });
 
 export const processText = asyncHandler(async (req, res) => {
   const { title, text } = req.body;
   const result = await processTextDocument(title, text, req.user?.id);
+
+  ActivityLogService.logUpload(req.user?.id || 'demo-user-101', title || 'Raw Text Document', 'text/plain', text?.length || 0, req);
+
   return res.status(201).json(new ApiResponse(201, result, 'Raw text document ingested and saved'));
 });
 
@@ -41,7 +51,11 @@ export const getDocumentById = asyncHandler(async (req, res) => {
 });
 
 export const deleteDocument = asyncHandler(async (req, res) => {
+  const doc = await documentStorage.getDocumentById(req.params.id);
   await documentStorage.deleteDocument(req.params.id);
+
+  ActivityLogService.logDocumentDelete(req.user?.id || 'demo-user-101', req.params.id, doc?.title || 'Document', req);
+
   return res.status(200).json(new ApiResponse(200, {}, 'Document deleted successfully'));
 });
 
