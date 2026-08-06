@@ -8,8 +8,6 @@ import { useNotification } from '../../context/NotificationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiZap,
-  FiSun,
-  FiMoon,
   FiEye,
   FiVolume2,
   FiVolumeX,
@@ -17,18 +15,23 @@ import {
   FiMicOff,
   FiHelpCircle,
   FiRotateCcw,
-  FiChevronDown,
-  FiChevronUp,
   FiType,
   FiMaximize2
 } from 'react-icons/fi';
+
+const fontLevels = ['small', 'medium', 'large', 'xlarge'];
+const fontPercentages = {
+  small: '85%',
+  medium: '100%',
+  large: '115%',
+  xlarge: '130%',
+};
 
 export const FloatingAccessibilityToolbar = ({ onOpenKeyboardModal }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [rulerActive, setRulerActive] = useState(false);
 
   const { settings, updateSettings } = useSettings();
-  const { themeMode, toggleTheme } = useTheme();
   const { isSpeaking, speak, stop } = useSpeechSynthesis();
   const { isListening, transcript, startListening, stopListening } = useSpeechRecognition();
   const { addToast } = useNotification();
@@ -47,6 +50,24 @@ export const FloatingAccessibilityToolbar = ({ onOpenKeyboardModal }) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const handleDecreaseFont = () => {
+    const currentIndex = fontLevels.indexOf(settings.fontSize || 'medium');
+    if (currentIndex > 0) {
+      const nextSize = fontLevels[currentIndex - 1];
+      updateSettings({ fontSize: nextSize });
+      addToast({ message: `Font size scaled to ${fontPercentages[nextSize]}`, type: 'info' });
+    }
+  };
+
+  const handleIncreaseFont = () => {
+    const currentIndex = fontLevels.indexOf(settings.fontSize || 'medium');
+    if (currentIndex < fontLevels.length - 1) {
+      const nextSize = fontLevels[currentIndex + 1];
+      updateSettings({ fontSize: nextSize });
+      addToast({ message: `Font size scaled to ${fontPercentages[nextSize]}`, type: 'info' });
+    }
+  };
 
   const handleToggleVoiceInput = () => {
     if (isListening) {
@@ -79,6 +100,8 @@ export const FloatingAccessibilityToolbar = ({ onOpenKeyboardModal }) => {
     addToast({ message: 'Accessibility preferences reset to default.', type: 'info' });
   };
 
+  const currentPercentage = fontPercentages[settings.fontSize] || '100%';
+
   return (
     <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-2">
       <AnimatePresence>
@@ -94,25 +117,30 @@ export const FloatingAccessibilityToolbar = ({ onOpenKeyboardModal }) => {
               <span className="text-[10px] text-slate-500 font-mono">Alt + A</span>
             </div>
 
-            {/* Font Scaling */}
+            {/* Font Scaling Stepper */}
             <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-slate-800">
               <span className="font-semibold text-slate-300 flex items-center gap-1"><FiType /> Font Size</span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => updateSettings({ fontSize: 'small' })}
-                  className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white font-bold"
+                  onClick={handleDecreaseFont}
+                  disabled={settings.fontSize === 'small'}
+                  className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 hover:text-white font-bold flex items-center justify-center transition-all cursor-pointer"
+                  title="Decrease Font Size"
                 >
                   -
                 </button>
                 <button
                   onClick={() => updateSettings({ fontSize: 'medium' })}
-                  className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white text-[10px]"
+                  title="Reset Font Size to 100%"
+                  className="px-2 py-0.5 rounded bg-slate-800/90 text-cyan-400 hover:text-cyan-300 text-[11px] font-mono font-bold transition-all cursor-pointer"
                 >
-                  100%
+                  {currentPercentage}
                 </button>
                 <button
-                  onClick={() => updateSettings({ fontSize: 'large' })}
-                  className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white font-bold"
+                  onClick={handleIncreaseFont}
+                  disabled={settings.fontSize === 'xlarge'}
+                  className="w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-300 hover:text-white font-bold flex items-center justify-center transition-all cursor-pointer"
+                  title="Increase Font Size"
                 >
                   +
                 </button>
