@@ -8,7 +8,7 @@ export const SettingsProvider = ({ children }) => {
     return saved
       ? JSON.parse(saved)
       : {
-          mode: 'system', // 'light' | 'dark' | 'system'
+          mode: 'dark', // 'light' | 'dark' | 'system'
           fontSize: 'medium', // 'small' | 'medium' | 'large' | 'xlarge'
           readingSpeed: 1.0,
           highContrast: false,

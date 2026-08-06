@@ -22,6 +22,109 @@
   }
 }
 
+/* ====================================================== */
+/* LIGHT MODE STYLES & OVERRIDES                          */
+/* ====================================================== */
+html.light,
+html:not(.dark):not(.high-contrast) {
+  color-scheme: light;
+}
+
+html.light body,
+html:not(.dark):not(.high-contrast) body,
+html.light div.bg-slate-950,
+html:not(.dark):not(.high-contrast) div.bg-slate-950 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-card,
+html:not(.dark):not(.high-contrast) .glass-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.02) !important;
+}
+
+html.light .glass-panel,
+html:not(.dark):not(.high-contrast) .glass-panel {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .glass-input,
+html:not(.dark):not(.high-contrast) .glass-input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-input::placeholder,
+html:not(.dark):not(.high-contrast) .glass-input::placeholder {
+  color: #64748b !important;
+}
+
+/* Light Mode Card & Container Backgrounds */
+html.light .bg-slate-900,
+html:not(.dark):not(.high-contrast) .bg-slate-900,
+html.light .bg-slate-900\/80,
+html:not(.dark):not(.high-contrast) .bg-slate-900\/80,
+html.light .bg-slate-900\/40,
+html:not(.dark):not(.high-contrast) .bg-slate-900\/40,
+html.light .bg-slate-800\/50,
+html:not(.dark):not(.high-contrast) .bg-slate-800\/50 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light Mode Text Typography */
+html.light .text-white,
+html:not(.dark):not(.high-contrast) .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-100,
+html:not(.dark):not(.high-contrast) .text-slate-100,
+html.light .text-slate-200,
+html:not(.dark):not(.high-contrast) .text-slate-200,
+html.light .text-slate-300,
+html:not(.dark):not(.high-contrast) .text-slate-300 {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-400,
+html:not(.dark):not(.high-contrast) .text-slate-400 {
+  color: #475569 !important;
+}
+
+html.light .text-slate-500,
+html:not(.dark):not(.high-contrast) .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Light Mode Borders */
+html.light .border-slate-800,
+html:not(.dark):not(.high-contrast) .border-slate-800,
+html.light .border-slate-700,
+html:not(.dark):not(.high-contrast) .border-slate-700,
+html.light .border-slate-700\/60,
+html:not(.dark):not(.high-contrast) .border-slate-700\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Light Mode Interactive Buttons & Hover States */
+html.light .bg-slate-800,
+html:not(.dark):not(.high-contrast) .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+html.light .hover\:bg-slate-800\/80:hover,
+html:not(.dark):not(.high-contrast) .hover\:bg-slate-800\/80:hover,
+html.light .hover\:bg-slate-800:hover,
+html:not(.dark):not(.high-contrast) .hover\:bg-slate-800:hover {
+  background-color: #e2e8f0 !important;
+}
+
 /* Dyslexia Mode Typography Extensions */
 html.dyslexia-mode body {
   letter-spacing: 0.12em !important;

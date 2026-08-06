@@ -3,20 +3,35 @@ import { createContext, useState, useEffect, useContext } from 'react';
 export const ThemeContext = createContext(null);
 
 export const ThemeProvider = ({ children }) => {
-  const [themeMode, setThemeMode] = useState(() => localStorage.getItem('ascess_theme_mode') || 'dark');
+  const [themeMode, setThemeMode] = useState(() => {
+    const saved = localStorage.getItem('ascess_theme_mode');
+    return saved || 'dark';
+  });
 
   useEffect(() => {
     const root = document.documentElement;
     localStorage.setItem('ascess_theme_mode', themeMode);
 
+    root.classList.remove('dark', 'light');
+
     if (themeMode === 'system') {
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (systemDark) root.classList.add('dark');
-      else root.classList.remove('dark');
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const applySystemTheme = (e) => {
+        root.classList.remove('dark', 'light');
+        if (e.matches) {
+          root.classList.add('dark');
+        } else {
+          root.classList.add('light');
+        }
+      };
+
+      applySystemTheme(mediaQuery);
+      mediaQuery.addEventListener('change', applySystemTheme);
+      return () => mediaQuery.removeEventListener('change', applySystemTheme);
     } else if (themeMode === 'dark') {
       root.classList.add('dark');
     } else {
-      root.classList.remove('dark');
+      root.classList.add('light');
     }
   }, [themeMode]);
 
