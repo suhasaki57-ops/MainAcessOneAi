@@ -1,8 +1,8 @@
 import api from './api';
 
 export const aiService = {
-  chat: async (prompt, history = []) => {
-    return await api.post('/ai/chat', { prompt, history });
+  chat: async (prompt, history = [], activeDoc = null) => {
+    return await api.post('/ai/chat', { prompt, history, activeDoc });
   },
   simplify: async (text, level = 'simple') => {
     return await api.post('/ai/simplify', { text, level });

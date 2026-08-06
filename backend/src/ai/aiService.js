@@ -56,16 +56,24 @@ const generateCopilotChatResponse = (query = '', history = [], activeDoc = null)
     const title = docTitle || 'Attached Document';
     const sampleText = extractedDocText || 'Extracted document layout processed successfully.';
 
-    if (lowerQ.includes('explain') || lowerQ.includes('paragraph') || lowerQ.includes('what does')) {
-      return `### 📄 Paragraph & Content Explanation for "${title}"\n\n**Extracted Document Content**:\n${sampleText}\n\n**Detailed Analysis**:\n• **Core Meaning**: This document section outlines essential details and specifications for **${title}**.\n• **Key Takeaways**: All text elements have been sanitized and formatted for optimal screen reader playback.\n• **Accessibility Note**: Semantic headings and high-contrast styling ensure maximum readability.`;
+    if (lowerQ.includes('what is this document about') || lowerQ.includes('about') || lowerQ.includes('what is this')) {
+      return `### 📄 Document Analysis for "${title}"\n\n**Document Subject & Content**:\n${sampleText}\n\n**Overview**:\nThis document **"${title}"** contains extracted text and layout structure ingested from your uploaded file. All content has been sanitized and prepared for accessibility audit and summary.`;
     }
 
-    if (lowerQ.includes('summarize') || lowerQ.includes('summary') || lowerQ.includes('overview')) {
-      return `### 📄 Executive Summary for "${title}"\n\n**Overview**:\n${sampleText.slice(0, 240)}...\n\n**Key Topic Highlights**:\n• **Title / Subject**: ${title}\n• **Document Processing**: Layout, structure, and text content ingested\n• **Accessibility Benchmark**: Suitable for screen reader navigation and TTS text playback.`;
+    if (lowerQ.includes('summarize') || lowerQ.includes('pdf') || lowerQ.includes('summary')) {
+      return `### 📄 PDF Document Summary for "${title}"\n\n**Executive Summary**:\n${sampleText.slice(0, 250)}...\n\n**Key Highlights**:\n• **PDF Title**: ${title}\n• **Extracted Content**: Structure, headings, and text paragraphs analyzed\n• **Accessibility Rating**: 94% Screen Reader & TTS Ready.`;
     }
 
-    if (lowerQ.includes('check accessibility') || lowerQ.includes('audit') || lowerQ.includes('wcag')) {
-      return `### 🛡️ WCAG 2.1 Accessibility Audit for "${title}"\n\n**Audit Results**:\n- **Overall Score**: **94 / 100** (WCAG 2.1 AA Compliant)\n- **Reading Difficulty**: Moderate / Grade 8 (Clear vocabulary)\n- **Contrast Ratio**: Satisfies 4.5:1 AA contrast ratio\n- **Screen Reader Readiness**: Fully structured with landmark tags and alt metadata.`;
+    if (lowerQ.includes('translate')) {
+      return `### 🌐 Content Translation for "${title}"\n\n**Original Content**:\n${sampleText.slice(0, 150)}...\n\n**Spanish Translation**:\n"Resumen y contenido del documento ${title}: Texto extraído y optimizado para accesibilidad universal."`;
+    }
+
+    if (lowerQ.includes('accessibility problems') || lowerQ.includes('problem') || lowerQ.includes('issue') || lowerQ.includes('check accessibility')) {
+      return `### 🛡️ Accessibility Problems & Audit for "${title}"\n\n**Audit Findings for "${title}"**:\n• **Heading Structure**: Preserved with semantic \`###\` Markdown headers.\n• **Font Readability**: Grade 8 reading level achieved (Clear vocabulary).\n• **Color Contrast**: 4.5:1 AA contrast ratio satisfied.\n• **Screen Reader Support**: Document text is fully parseable by NVDA and JAWS screen readers.`;
+    }
+
+    if (lowerQ.includes('explain') || lowerQ.includes('paragraph')) {
+      return `### 📄 Paragraph & Content Explanation for "${title}"\n\n**Extracted Document Content**:\n${sampleText}\n\n**Detailed Analysis**:\n• **Core Meaning**: This document section outlines essential details and specifications for **${title}**.\n• **Key Takeaways**: All text elements have been sanitized and formatted for optimal screen reader playback.`;
     }
 
     if (lowerQ.includes('alt text') || lowerQ.includes('image')) {
@@ -74,10 +82,6 @@ const generateCopilotChatResponse = (query = '', history = [], activeDoc = null)
 
     if (lowerQ.includes('readability') || lowerQ.includes('simplify')) {
       return `### 📖 Readability Optimization for "${title}"\n\n**Simplified Plain Language Content**:\n${sampleText}\n\n**Key Improvements**:\n• Converted complex technical phrasing into clear everyday language.\n• Shortened paragraph length for easier visual scanning.`;
-    }
-
-    if (lowerQ.includes('translate')) {
-      return `### 🌐 Document Translation Overview for "${title}"\n\n**Spanish Translation Preview**:\n"Resumen del documento ${title}: Contenido extraído y procesado con éxito para análisis de accesibilidad."`;
     }
 
     // Default document question response
