@@ -179,3 +179,15 @@ html.reduce-motion *::after {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 1);
 }
+
+/* Enforce Horizontal Writing Mode & Prevent Vertical Text Rendering Bug */
+.glass-card,
+[class*="chat"],
+.whitespace-pre-wrap,
+.break-words {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+

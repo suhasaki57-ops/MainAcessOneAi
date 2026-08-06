@@ -325,7 +325,7 @@ export const AIChatPage = () => {
                 </div>
 
                 <div
-                  className={`p-4 rounded-2xl text-xs leading-relaxed ${
+                  className={`p-4 rounded-2xl text-xs leading-relaxed min-w-0 break-words [writing-mode:horizontal-tb] ${
                     msg.sender === 'user'
                       ? 'bg-cyan-600 text-white rounded-tr-none'
                       : msg.isError
