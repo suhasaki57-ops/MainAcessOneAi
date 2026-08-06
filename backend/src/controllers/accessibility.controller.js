@@ -90,6 +90,6 @@ export const exportReport = asyncHandler(async (req, res) => {
 });
 
 export const getAnalytics = asyncHandler(async (req, res) => {
-  const analytics = getAnalyticsData(req.user?.id);
+  const analytics = await getAnalyticsData(req.user?.id);
   return res.status(200).json(new ApiResponse(200, analytics, 'Analytics metrics retrieved'));
 });
