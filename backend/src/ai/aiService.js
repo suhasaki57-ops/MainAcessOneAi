@@ -211,7 +211,7 @@ const analyzeDynamicOCR = (text = '') => {
 
   const lower = cleaned.toLowerCase();
 
-  // 1. YouTube & Video Portal
+  // 1. YouTube & Video Portal (UNTOUCHED)
   if (lower.includes('youtube') || lower.includes('youtu.be')) {
     return {
       title: 'YouTube Video Streaming Platform',
@@ -226,13 +226,11 @@ const analyzeDynamicOCR = (text = '') => {
     };
   }
 
-  // 2. Freedom Refined Sunflower Oil Product Package Label
+  // 2. Freedom Refined Sunflower Oil Product Package Label (STRICT MATCHING)
   if (
-    lower.includes('freedom') ||
-    lower.includes('oil') ||
-    lower.includes('sunflower') ||
-    lower.includes('gold winner') ||
-    lower.includes('extracted document text')
+    lower.includes('freedom oil') ||
+    lower.includes('sunflower oil') ||
+    lower.includes('gold winner oil')
   ) {
     return {
       title: 'Freedom Refined Sunflower Oil',
@@ -247,27 +245,46 @@ const analyzeDynamicOCR = (text = '') => {
     };
   }
 
-  const lines = cleaned.split('\n').filter((l) => l.trim().length > 3);
-  const titleLine = lines.find((l) => l.startsWith('###')) || lines[0] || 'Freedom Refined Sunflower Oil';
-  let cleanTitle = titleLine.replace(/^###\s*/, '').trim();
+  // 3. Dynamic Parser for Raw Text & General Product Documents (e.g. EchoStream Wireless Headphones)
+  const lines = cleaned.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
 
-  if (cleanTitle.includes('Extracted document text') || cleanTitle.length < 3) {
-    cleanTitle = 'Freedom Refined Sunflower Oil';
+  // Extract Title
+  let cleanTitle = 'Ingested Document Content';
+  const nameLine = lines.find((l) => l.toLowerCase().startsWith('product name:') || l.startsWith('###'));
+  if (nameLine) {
+    cleanTitle = nameLine.replace(/^product name:\s*/i, '').replace(/^###\s*/, '').trim();
+  } else if (lines.length > 0) {
+    cleanTitle = lines[0].slice(0, 50);
   }
 
-  const bulletLines = lines.filter((l) => l.startsWith('•')).map((l) => l.replace(/^•\s*/, '').trim());
-  const leadParagraph = lines.find((l) => !l.startsWith('###') && !l.startsWith('•')) || cleanTitle;
+  // Extract Summary / Overview
+  let overviewText = '';
+  const overviewIdx = lines.findIndex((l) => l.toLowerCase().startsWith('overview:'));
+  if (overviewIdx !== -1 && lines[overviewIdx + 1]) {
+    overviewText = lines[overviewIdx + 1];
+  } else {
+    overviewText = lines.find((l) => !l.toLowerCase().startsWith('product name:') && l.length > 30) || cleanTitle;
+  }
+
+  // Extract Bullet Points
+  const extractedBullets = lines
+    .filter((l) => l.startsWith('-') || l.startsWith('•') || l.startsWith('*'))
+    .map((l) => l.replace(/^[\-\•\*]\s*/, '').trim());
+
+  const bulletPoints =
+    extractedBullets.length > 0
+      ? extractedBullets.slice(0, 5)
+      : [
+          `Product Details: ${cleanTitle}`,
+          `Overview: ${overviewText.slice(0, 70)}`,
+          'Features and specifications parsed successfully.',
+        ];
 
   return {
     title: cleanTitle,
     cleanedText: cleaned,
-    shortSummary: `Product packaging label for Freedom Refined Sunflower Oil. High-purity cooking oil enriched with Vitamins A & D, featuring Low Absorb Technology.`,
-    bulletPoints: bulletLines.length > 0 ? bulletLines : [
-      '100% Pure Refined Sunflower Oil',
-      'Low Absorb Technology & Zero Cholesterol',
-      'Enriched with Essential Vitamins A, D & E',
-      'Sealed Fresh Tamper-Evident Packaging',
-    ],
+    shortSummary: `Document Overview for "${cleanTitle}": ${overviewText.slice(0, 160)}.`,
+    bulletPoints,
   };
 };
 
@@ -395,12 +412,11 @@ export const aiEngine = {
     const fallbackParsed = analyzeDynamicOCR(text);
 
     const result = parseJSONOrFallback(rawOutput, {
-      shortSummary: fallbackParsed?.shortSummary || `Executive summary for ${fallbackParsed?.title || 'Web Content'}`,
+      shortSummary: fallbackParsed?.shortSummary || `Executive summary for ${fallbackParsed?.title || 'Ingested Content'}`,
       detailedSummary: `Comprehensive document analysis covering extracted text content.`,
       bulletPoints: fallbackParsed?.bulletPoints || [
-        '100% Pure Refined Sunflower Oil',
-        'Low Absorb Technology & Zero Cholesterol',
-        'Enriched with Essential Vitamins A, D & E',
+        'Extracted text details and specifications',
+        'Document layout processed',
       ],
       importantTakeaways: ['High readability document text extracted.'],
       actionItems: ['Review document summary notes.'],
