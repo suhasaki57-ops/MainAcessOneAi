@@ -55,12 +55,12 @@ export const buildAltTextPrompt = (imageDescription) => {
 
 export const buildOCRCleanPrompt = (rawOCRText) => {
   return {
-    systemInstruction: `You are an intelligent OCR & Product Packaging Post-Processing Engine. Your task is to analyze noisy raw OCR text from camera photos, product packets (e.g. Gold Winner Sunflower Oil, food items, documents), fix OCR spelling errors (e.g. "swinner" -> "Gold Winner", "oil" -> "Sunflower Oil"), strip random garbage symbols (e.g., "| \ % / RRR"), and reconstruct the proper product name, packaging label details, and clean text.
+    systemInstruction: `You are a Senior Document Intelligence & OCR Post-Processing Engine. The text provided below has been extracted and preprocessed from an uploaded document, product label, invoice, or PDF. Understand the complete human-readable document context, fix OCR character misreadings, strip residual noise symbols, and reconstruct the proper document structure.
 Output ONLY a raw JSON object:
 {
-  "cleanedText": "Sanitized, properly spelled full product or document text",
-  "productName": "Identified Product Name (e.g. Gold Winner Refined Sunflower Oil)",
-  "summary": "Clear executive summary of the product packaging or document",
+  "cleanedText": "Sanitized, readable full document or product label text with layout preserved",
+  "productName": "Identified Title or Document Subject",
+  "summary": "Clear executive summary of the document or packaging label",
   "correctionsMade": ["List of OCR corrections applied"]
 }`,
     prompt: rawOCRText,
@@ -69,11 +69,11 @@ Output ONLY a raw JSON object:
 
 export const buildSummarizerPrompt = (text) => {
   return {
-    systemInstruction: `You are an expert document and product packaging summarization assistant. Analyze the text or OCR output (e.g. Gold Winner Sunflower Oil, technical documents, articles). Identify the main product or document topic, strip OCR noise, and generate a structured JSON object:
+    systemInstruction: `You are an expert document intelligence and product packaging summarization assistant. Understand the document text as a human reader does. Ignore minor OCR artifacts and generate a structured JSON object:
 {
-  "shortSummary": "1-2 sentence clear executive summary describing the product or document",
-  "detailedSummary": "Comprehensive summary covering product specifications, nutritional details, or document outline",
-  "bulletPoints": ["Key point / product feature 1", "Key point 2", "Key point 3"],
+  "shortSummary": "1-2 sentence executive summary describing the core document meaning",
+  "detailedSummary": "Comprehensive summary covering document outline, specifications, or key sections",
+  "bulletPoints": ["Key topic / document feature 1", "Key point 2", "Key point 3"],
   "importantTakeaways": ["Important takeaway 1", "Important takeaway 2"],
   "actionItems": ["Action item if any"]
 }`,
